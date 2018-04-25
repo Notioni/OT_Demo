@@ -11,9 +11,8 @@ extern uart_dev_t uart_0;
 
 #define os_uart uart_0
 #define wifi_uart brd_uart1_dev
-
-#define UART1_PORT 0
-#define UART2_PORT 1
+#define MAX_CMD_LEN 512
+#define MAX_OUT_LEN 2000
 
 static aos_mutex_t at_mutex;
 
@@ -35,13 +34,13 @@ static int at_test(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, uint16_t
 	uint8_t time_out = 0, respone_start = 0;
 
 	memset(pOutBuffer, 0, OutLength);
-	hal_uart_send(&brd_uart1_dev, (void *)"AT+TEST", strlen("AT+TEST"), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, (void *)"\r", 1, 30000);
+	hal_uart_send(&wifi_uart, (void *)"AT+TEST", strlen("AT+TEST"), 30000);
+	ret_val = hal_uart_send(&wifi_uart, (void *)"\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 3000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 3000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -79,18 +78,18 @@ static int handle_at(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, uint16
 	uint8_t time_out = 0, respone_start = 0;
 
 	memset(pOutBuffer, 0, OutLength);
-	hal_uart_send(&brd_uart1_dev, (void *)"AT", strlen("AT"), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, (void *)"\r", 1, 30000);
+	hal_uart_send(&wifi_uart, (void *)"AT", strlen("AT"), 3000);
+	ret_val = hal_uart_send(&wifi_uart, (void *)"\r", 1, 3000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 3000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 1000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
 					return HAL_ERROR;
-				krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/10);
+				krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
 			}
 		}while(recv_size != 1);
 		time_out = 0;
@@ -123,13 +122,13 @@ static int at_get_at_verion(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer,
 	uint8_t time_out = 0, respone_start = 0;
 
 	memset(pOutBuffer, 0, OutLength);
-	hal_uart_send(&brd_uart1_dev, (void *)"AT+GETATVERSION", strlen("AT+GETATVERSION"), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, (void *)"\r", 1, 30000);
+	hal_uart_send(&wifi_uart, (void *)"AT+GETATVERSION", strlen("AT+GETATVERSION"), 30000);
+	ret_val = hal_uart_send(&wifi_uart, (void *)"\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 3000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 3000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -172,13 +171,13 @@ static int at_version(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, uint1
 	uint8_t time_out = 0, respone_start = 0;
 
 	memset(pOutBuffer, 0, OutLength);
-	hal_uart_send(&brd_uart1_dev, (void *)"AT+FWVER?", strlen("AT+FWVER?"), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, (void *)"\r", 1, 30000);
+	hal_uart_send(&wifi_uart, (void *)"AT+FWVER?", strlen("AT+FWVER?"), 30000);
+	ret_val = hal_uart_send(&wifi_uart, (void *)"\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 3000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 3000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -216,13 +215,13 @@ static int at_recover_factory_config(enum at_cmd_e id, char *PInBuffer, char *pO
 	uint8_t time_out = 0, respone_start = 0;
 
 	memset(pOutBuffer, 0, OutLength);
-	hal_uart_send(&brd_uart1_dev, (void *)"AT+FACTORY", strlen("AT+FACTORY"), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	hal_uart_send(&wifi_uart, (void *)"AT+FACTORY", strlen("AT+FACTORY"), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, &Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, &Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				//printf("time_out = %d\r\n", time_out);
@@ -266,13 +265,13 @@ static int at_set_flash_lock(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				//printf("xiehj : time_out = %d\n", time_out);
@@ -313,13 +312,13 @@ static int at_refer_wifi_event_notification(enum at_cmd_e id, char *PInBuffer, c
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -361,13 +360,13 @@ static int at_set_wifi_scan_option(enum at_cmd_e id, char *PInBuffer, char *pOut
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -407,13 +406,13 @@ static int at_set_uart_echo(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer,
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -453,13 +452,13 @@ static int at_set_uart_fomat(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -499,13 +498,13 @@ static int at_set_uart_info(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer,
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -545,13 +544,13 @@ static int at_set_wifi_power_save(enum at_cmd_e id, char *PInBuffer, char *pOutB
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -587,14 +586,14 @@ static int at_wl_scan_func(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, 
 	uint8_t time_out = 0, respone_start = 0;;
 	
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	strcat(send_cmd, "\r\n");
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, &Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, &Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 20){
@@ -645,14 +644,14 @@ static int at_set_wifi_sta_info_start(enum at_cmd_e id, char *PInBuffer, char *p
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	strcat(send_cmd, "\r\n");
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				//printf("xiehj : time_out = %d\n", time_out);
@@ -744,14 +743,14 @@ static int at_set_common_func(enum at_cmd_e id, char *PInBuffer, char *pOutBuffe
 
 	strcat(send_cmd, PInBuffer);
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	strcat(send_cmd, "\r\n");
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, (void *)&Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -895,14 +894,14 @@ static int at_get_common_func(enum at_cmd_e id, char *PInBuffer, char *pOutBuffe
 	//strcat(send_cmd, "\r\n");
 
 	memset(pOutBuffer, 0, OutLength);
-	ret_val = hal_uart_send(&brd_uart1_dev, send_cmd, strlen(send_cmd), 30000);
-	ret_val = hal_uart_send(&brd_uart1_dev, "\r", 1, 30000);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
 	strcat(send_cmd, "\r\n");
 	if(ret_val != HAL_OK)
 		return HAL_ERROR;
 	while(1){
 		do {
-			ret_val = hal_uart_recv(&brd_uart1_dev, &Recv_ch, 1, &recv_size, 30000);
+			ret_val = hal_uart_recv(&wifi_uart, &Recv_ch, 1, &recv_size, 30000);
 			if(ret_val != HAL_OK){
 				time_out++;
 				if(time_out >= 10)
@@ -911,6 +910,57 @@ static int at_get_common_func(enum at_cmd_e id, char *PInBuffer, char *pOutBuffe
 			}
 		}while(recv_size != 1);
 		time_out = 0;
+		*(pOutBuffer + recv_size_t) = Recv_ch;
+		recv_size_t++;
+		if(recv_size_t >= 4){
+			if(strstr(pOutBuffer, send_cmd)   && (respone_start == 0) ){
+				respone_start = 1;
+				recv_size_t = 0;
+				memset(pOutBuffer, 0, OutLength);
+			}
+			else if(respone_start){
+				if(strstr(pOutBuffer, "ERROR\r\n") || strstr(pOutBuffer, "OK\r\n"))
+					break;
+			}
+		}
+		if(recv_size_t >= OutLength){
+			ret_val = HAL_ERROR;
+			break;
+		}
+	}
+	return ret_val;
+}
+
+static int at_fota_start(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, uint16_t OutLength)
+{
+	int32_t ret_val = HAL_OK;
+	uint32_t recv_size = 0, recv_size_t = 0;
+	char send_cmd[512] = {0};
+	char Recv_ch, end_ch, ret_ch;
+	uint8_t time_out = 0, respone_start = 0;
+
+	if(OutLength < 200)
+		return HAL_ERROR;
+
+	strcat(send_cmd, "AT+FOTA=");
+	strcat(send_cmd, PInBuffer);
+	memset(pOutBuffer, 0, OutLength);
+	ret_val = hal_uart_send(&wifi_uart, send_cmd, strlen(send_cmd), 30000);
+	ret_val = hal_uart_send(&wifi_uart, "\r", 1, 30000);
+	strcat(send_cmd, "\r\n");
+	if(ret_val != HAL_OK)
+		return HAL_ERROR;
+	while(1){
+		do {
+			ret_val = hal_uart_recv(&wifi_uart, (void *)&Recv_ch, 1, &recv_size, 30000);
+			if(ret_val != HAL_OK){
+				time_out++;
+				if(time_out >= 180)
+					return HAL_ERROR;
+				krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+			}
+		}while(recv_size != 1);
+		
 		*(pOutBuffer + recv_size_t) = Recv_ch;
 		recv_size_t++;
 		if(recv_size_t >= 4){
@@ -999,6 +1049,9 @@ static const struct at_ap_command at_cmds_table[] = {
     { .id = AT_CMD_AT_CIPRECV, .pre_cmd = "AT+CIPRECV", .help = "AT+CIPRECV=<id>[,port]", .function = NULL }, 
     { .id = AT_CMD_AT_CIPRECVCFG_GET, .pre_cmd = "AT+CIPRECVCFG?", .help = "AT+CIPRECVCFG?", .function = at_get_common_func },
     { .id = AT_CMD_AT_CIPRECVCFG_SET, .pre_cmd = "AT+CIPRECVCFG", .help = 	"AT+CIPRECVCFG=<recv mode>", .function = at_set_common_func },
+    //FOTA
+    { .id = AT_CMD_AT_FOTA, .pre_cmd = "AT+FOTA", .help = "AT+FOTA=<size>,<version>,<url>,<md5>", 
+    		.function = at_fota_start },
     { .id = AT_CMD_MAX, .help = "end", .function = NULL },
 };
 
@@ -1093,11 +1146,11 @@ void wifi_cmd_task(void *arg)
 	//struct nt_cli_command *command = NULL;
 	uint8_t cmd_index = 0xff;
 	uint32_t ret;
-	char pOutBuffer[2000] = "OK";
+	int icnt;
+	char pOutBuffer[MAX_OUT_LEN] = "OK";
 	//char pInBuffer[100];
-	char buff_cmd[100] = {0};
-	char cmd[100] = {0};
-	char icnt;
+	char buff_cmd[MAX_CMD_LEN] = {0};
+	char cmd[MAX_CMD_LEN] = {0};
 	char gch;
 	char AT_start = 0;
 	char *pInBuffer = NULL;
@@ -1131,7 +1184,7 @@ void wifi_cmd_task(void *arg)
 				}
 				else{
 					buff_cmd[icnt++] = gch;
-					if(icnt >= 100){
+					if(icnt >= MAX_CMD_LEN){
 						icnt = 0;
 						AT_start = 0;
 					}
