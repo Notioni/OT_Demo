@@ -559,7 +559,7 @@ void GUIDEMO_Sensor_Graph (void)
   // GUIDEMO_NotifyStartNext();
 }
 
-static void GUIDEMO_GET_WIFI_SSID (char buf[], int len)
+static int GUIDEMO_GET_WIFI_SSID (char buf[], int len)
 {
 #define AT_STR_BUF_LEN     128
 #define WIFI_SSID_MAX_LEN  24
@@ -573,12 +573,12 @@ static void GUIDEMO_GET_WIFI_SSID (char buf[], int len)
     
     char *p_begin = strstr(at_str_buf, at_str_head);
     if (!p_begin)
-      return;
+      return 0;
 
     p_begin += ver_head_len;
     char *p_end = strstr(p_begin, ",");
     if (!p_end)
-      return;
+      return 0;
 
     int wifi_ssid_len = p_end - p_begin;
     int copy_len = wifi_ssid_len < WIFI_SSID_MAX_LEN ? wifi_ssid_len : WIFI_SSID_MAX_LEN;
@@ -586,16 +586,17 @@ static void GUIDEMO_GET_WIFI_SSID (char buf[], int len)
     wifi_ssid[copy_len] = 0;
     
     snprintf(buf, len, "WiFi SSID: %s", wifi_ssid);
+		return 1;
   }
-
+  return 0;
 }
 
 void GUIDEMO_Version_Info (void)
 {
   #define VERSION_X_OFFSET     20
-  #define VERSION_Y_START      40
-  #define VERSION_Y_STEP       20
-
+  #define VERSION_Y_START      45
+  #define VERSION_Y_STEP       30
+  #define WIFI_Y_OFFSET        40
   // GUIDEMO_HideInfoWin();
   // GUIDEMO_ShowControlWin();
   // GUI_Exec();
@@ -608,17 +609,35 @@ void GUIDEMO_Version_Info (void)
   GUI_SetFont(&GUI_Font20_ASCII);
 
 #define WIFI_SSID_DISP_LEN 40
+	const char* wifi_error_info = "not connected";
   char wifi_ssid_disp[WIFI_SSID_DISP_LEN] = {0};
+	char wifi_old_ssid[WIFI_SSID_DISP_LEN] = {0};
+  int xSize = LCD_GetXSize();
 
   // display version info
   GUI_DispStringAt("HW version: A10_1_11",     VERSION_X_OFFSET, VERSION_Y_START);
   GUI_DispStringAt("FW version: A10_V0.97",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
-  GUI_DispStringAt("Slogan: xxxxxx",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
-  GUI_DispStringAt("WiFi SSID:",               VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
+  GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+  
+  GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 2 + WIFI_Y_OFFSET);
   
   while(1) {
-    GUIDEMO_GET_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN);
-    GUI_DispStringAt(wifi_ssid_disp,           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
+    if (GUIDEMO_GET_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
+      if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
+        GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+        GUI_DispCEOL();
+        GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+        snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_ssid_disp);
+      }
+    }
+    else {
+      if (strcmp(wifi_error_info, wifi_old_ssid)) {
+          GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+          GUI_DispCEOL();
+          GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+          snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
+        } 
+    }
 
     for (int i = 0; i < 10; i++) {
       if (key_flag != GUI_DEMO_PAGE_1)

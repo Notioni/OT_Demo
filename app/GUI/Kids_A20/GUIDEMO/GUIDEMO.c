@@ -105,7 +105,7 @@ static int     _HaltTimeStart;
 static int     _Halt;
 int             _Next;
 
-int   key_flag = 0;
+int   key_flag = GUI_DEMO_PAGE_2;
 static int display_count = 0;
 
 /*********************************************************************
@@ -410,12 +410,12 @@ static void _Main(void) {
   GUI_Exec();
   WM_EnableMemdev(WM_HBKWIN);
 
-  if (!display_count) {
+   if (!display_count) {
     // show logo
 		display_count++;
     GUIDEMO_Intro();
     GUIDEMO_Delay(1000);
-  }
+   }
 
 	// show sensor graph
   // GUIDEMO_Sensor_Graph();
@@ -433,44 +433,26 @@ static void _Main(void) {
   // show sensor data sheet
   // GUIDEMO_Unclassified();
 
-
-  GUIDEMO_Unclassified();
-
-#if 0
-
-  int last_flag = 0;
-
-  while (1)
-  {
-    key_flag = 0;
-    if (last_flag == 0)
-    {
-      last_flag = 1;
-      WM_SelectWindow(WM_HBKWIN);
-      GUI_Clear();
-      
-      WM_InvalidateWindow(_hDialogControl);
-      WM_DisableMemdev(WM_HBKWIN);
-      GUI_Exec();
-      WM_EnableMemdev(WM_HBKWIN);
-      
-      GUIDEMO_Intro();
-      // GUIDEMO_Delay(5000);
-      while(1)
-      {
-        if (key_flag == 1)
-          break;
-
-        krhino_task_sleep(krhino_ms_to_ticks(200));
-      }
+  while(key_flag != GUI_DEMO_PAGE_1) {
+    if (key_flag == GUI_DEMO_PAGE_2) {
+      // show version info
+      GUIDEMO_Version_Info();
     }
-    else
-    {
-      last_flag = 0;
+    else if (key_flag == GUI_DEMO_PAGE_3) {
+      // show sensor data sheet
       GUIDEMO_Unclassified();
     }
+    #if 0
+    else if (key_flag == GUI_DEMO_PAGE_4) {
+      // show sensor graph
+      GUIDEMO_Sensor_Graph();
+    }
+    #endif
+    else {
+        key_flag = GUI_DEMO_PAGE_2;
+    }
   }
-#endif
+
   _iDemo = 0;
   WM_InvalidateWindow(_hDialogControl);
   WM_DisableMemdev(WM_HBKWIN);
@@ -481,32 +463,29 @@ extern uint8_t camera_dis_on;
 
 void GUIDEMO_Main(void) {
   _pfDrawBk = _DrawBkSimple;
+  // _Main();
 
 //  while (1) {
-	//	 printf("hello world! \n");
-  
+
   CameraDEMO_Main();
 
 	while(1) {
-    if (key_flag == 0) {
+    if (key_flag != GUI_DEMO_PAGE_1) {
       GUI_Init();
       _Main();
-      GUI_Exit();
-    }
-    else if (key_flag == 1) {
-			GUI_Init();
-      camera_dis_on = 1;
-      while(1) {
-        if (key_flag != 1) {
-				  camera_dis_on = 0;
-					GUI_Exit();
-				  break;
-				}
-        krhino_task_sleep(krhino_ms_to_ticks(100));
-      }
+      // GUI_Exit();
     }
     else {
-      key_flag = 0;
+	    GUI_Init();
+      camera_dis_on = 1;
+      while(1) {
+        if (key_flag != GUI_DEMO_PAGE_1) {
+    		  camera_dis_on = 0;
+    		  // GUI_Exit();
+    		  break;
+  		  }
+        krhino_task_sleep(krhino_ms_to_ticks(100));
+      }
     }
   }
 

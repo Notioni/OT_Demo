@@ -1061,9 +1061,9 @@ int sensor_brd_init(void)
 	ret |= drv_als_liteon_ltr553_init(&brd_i2c2_dev);
 	ret |= drv_ps_liteon_ltr553_init(&brd_i2c2_dev);
 	ret |= drv_humi_sensirion_shtc1_init(&brd_i2c2_dev);
+	ret |= drv_temp_sensirion_shtc1_init(&brd_i2c2_dev);
 	ret |= drv_acc_st_lsm6dsl_init(&brd_i2c4_dev, ACC_ST_LSM6DSL_ADDR_HIGH);
 	ret |= drv_gyro_st_lsm6dsl_init(&brd_i2c4_dev, GYRO_ST_LSM6DSL_ADDR_HIGH);
-	ret |= drv_temp_st_lsm6dsl_init(&brd_i2c4_dev, TEMP_ST_LSM6DSL_ADDR_HIGH);
 	ret |= drv_mag_memsic_mmc3680kj_init(&brd_i2c4_dev);
 
 	return ret;
