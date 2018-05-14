@@ -222,6 +222,10 @@ typedef enum {
   #define SHOW_GUIDEMO_UNCLASSIFIED      (1)
 #endif
 
+#ifndef   CONFIG_AOS_FATFS_SUPPORT_MMC
+  #define CONFIG_AOS_FATFS_SUPPORT_MMC   (1)
+#endif
+
 /*********************************************************************
 *
 *       Configuration macros
@@ -251,8 +255,14 @@ enum gui_demo_page {
   GUI_DEMO_PAGE_5,
   GUI_DEMO_PAGE_6,
 
+  GUI_DEMO_PAGE_INIT  = 100,
+
   GUI_DEMO_PAGE_INVAL = 255
 };
+
+// KEY stabilization
+#define KEY_STABILIZATION   50
+
 #endif
 
 /*********************************************************************
@@ -327,6 +337,9 @@ void GUIDEMO_Unclassified     (void);
 void GUIDEMO_Sensor_Graph     (void);
 void GUIDEMO_Version_Info     (void);
 void GUIDEMO_Sound_record     (void);
+void GUIDEMO_G_Sensors        (void);
+void GUIDEMO_Other_Sensors    (void);
+void GUIDEMO_Loopback         (void);
 
 /*********************************************************************
 *

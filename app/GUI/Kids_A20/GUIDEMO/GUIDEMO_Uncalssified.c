@@ -4,6 +4,7 @@
 #include <aos/uData.h>
 // #include "audio.h"
 #include "atdemo.h"
+#include "irda.h"
 
 #if (SHOW_GUIDEMO_UNCLASSIFIED)
 
@@ -12,6 +13,7 @@
 #define DEC_LEN_DEF      6
 
 #define GUIDEMO_UNCLASSIFIED_OFFSET 30
+
 /*
 static void _cbDesktop(WM_MESSAGE * pMsg)
 {
@@ -71,7 +73,7 @@ static int fd_als  = -1;
 static int fd_ps   = -1;
 static int fd_mag  = -1;
 static int fd_gyro = -1;
-
+#if 0 // sensor graph
 static GRAPH_SCALE_Handle _hScaleH_sensor, _hScaleV_sensor;
 
 static GUI_COLOR _aColorData_sensor[MAX_NUM_DATA_OBJ] = {
@@ -81,8 +83,9 @@ static GUI_COLOR _aColorData_sensor[MAX_NUM_DATA_OBJ] = {
   0x800000,
   0x000080
 };
-
+#endif
 extern int key_flag;
+extern int irda_flag;
 
 static int sensor_all_open(void)
 {
@@ -272,7 +275,7 @@ static int get_gyro_data(int32_t *a, int32_t *b, int32_t *c)
 
 	return 0;
 }
-
+#if 0 // sensor graph
 /*********************************************************************
 *
 *       _cbBk
@@ -463,8 +466,9 @@ static void _Graph_Sensor_Demo()
   WIDGET_SetDefaultEffect(pEffectOld);
 
 }
-
+#endif
 void GUIDEMO_Unclassified(void) {
+#if 0
   int xSize = LCD_GetXSize();
 	int32_t acc_adc_data[3] = {0};
   int32_t mag_data[3] = {0};
@@ -516,7 +520,7 @@ void GUIDEMO_Unclassified(void) {
   GUI_DispStringAt("humidity",             GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP * 2);
   GUI_DispStringAt("als",                  GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP * 3);
 	GUI_DispStringAt("proximity",            GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP * 4);
-  GUI_DispStringAt("sensor data upload:",  GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP * 5);
+  // GUI_DispStringAt("sensor data upload:",  GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP * 5);
 
   // GUI_HWIN hWnd;
   do{
@@ -636,16 +640,17 @@ void GUIDEMO_Unclassified(void) {
    //   WM_SetCallback(WM_HBKWIN, _cbDesktop);
 
   }while(1);
-
+#endif
 }
-
+#if 0 // sensor graph
 void GUIDEMO_Sensor_Graph (void)
 {
   GUIDEMO_ShowInfoWin();
   _Graph_Sensor_Demo();
   // GUIDEMO_NotifyStartNext();
 }
-
+#endif
+#if 0
 static uint32_t test_at_cmd_request(enum at_cmd_e request_id, char *pInBuffer, char *pOutBuffer, uint16_t OutLength)
 {
   (void)request_id;
@@ -690,13 +695,90 @@ static int GUIDEMO_GET_WIFI_SSID (char buf[], int len)
 
   return 0;
 }
+#endif
+
+static int GUIDEMO_GET_ALL_WIFI_SSID (char buf[], int len)
+{
+#define AT_STR_BUF_LEN     2048
+#define WIFI_SSID_MAX_LEN  32
+
+  // construct version string
+  char at_str_buf[AT_STR_BUF_LEN]         = {0};
+  char wifi_ssid[WIFI_SSID_MAX_LEN + 1]   = {0};
+  const char* at_str_head = "+SCAN:";
+  int ver_head_len = strlen(at_str_head);
+  if(!at_cmd_request(AT_CMD_AT_WSCAN, NULL, at_str_buf, AT_STR_BUF_LEN)) {
+    char *p_begin = strstr(at_str_buf, at_str_head);
+    if (!p_begin) {
+      printf("err1 \n");
+      goto GET_WIFI_SSID_ERR;
+    }
+
+    p_begin = strstr(p_begin, "\n");
+    if (!p_begin) {
+      printf("err2 \n");
+      goto GET_WIFI_SSID_ERR;
+    }
+
+    p_begin += 1;
+    char *p_end = strstr(p_begin, ",");
+    if (!p_end) {
+      printf("err3 \n");
+      goto GET_WIFI_SSID_ERR;
+    }
+
+    int wifi_ssid_len = p_end - p_begin;
+    int copy_len = wifi_ssid_len < WIFI_SSID_MAX_LEN ? wifi_ssid_len : WIFI_SSID_MAX_LEN;
+    strncpy(wifi_ssid, p_begin, copy_len);
+    wifi_ssid[copy_len] = 0;
+
+    if (strcmp(wifi_ssid, "0")) {
+      snprintf(buf, len, "%s", wifi_ssid);
+      return 1;
+    }
+
+  }
+
+GET_WIFI_SSID_ERR:
+
+  return 0;
+}
+
+static int GUIDEMO_Check_SD_Card()
+{
+  const char* test_file_path = "/sdcard/test.txt";
+  const char* test_string = "Fatfs test string.";
+
+  int ret; 
+  printf(" Fatfs write test\n");
+  int fd = aos_open(test_file_path, O_RDWR | O_CREAT | O_TRUNC);
+  printf("aos_open , ret = %d\n", fd);
+  if (fd < 0)
+    return 0;
+
+  ret = aos_write(fd, test_string, strlen(test_string));
+  printf("aos_write , ret = %d\n", ret);
+  if (ret < 0) {
+    return 0;
+  }
+
+  ret = aos_sync(fd);
+  printf("aos_sync , ret = %d\n", ret);
+  if (ret < 0) {
+    return 0;
+  }
+
+  aos_close(fd);
+  return 1;
+}
 
 void GUIDEMO_Version_Info (void)
 {
   #define VERSION_X_OFFSET     20
-  #define VERSION_Y_START      45
+  #define VERSION_Y_START      30
   #define VERSION_Y_STEP       30
-  #define WIFI_Y_OFFSET        40
+  #define WIFI_Y_OFFSET        35
+  #define SD_CARD_X_OFFSET     120
 
   // GUIDEMO_HideInfoWin();
   // GUIDEMO_ShowControlWin();
@@ -716,36 +798,319 @@ void GUIDEMO_Version_Info (void)
   int xSize = LCD_GetXSize();
 
   // display version info
-  GUI_DispStringAt("HW version: A20_1_11",     VERSION_X_OFFSET, VERSION_Y_START);
-  GUI_DispStringAt("FW version: A20_V0.91",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
-  GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
-  GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 2 + WIFI_Y_OFFSET);
+  GUI_DispStringAt("HW version: A20_1_12",     VERSION_X_OFFSET, VERSION_Y_START);
+  GUI_DispStringAt("FW version: A20_V0.92",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
+  // GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+  GUI_DispStringAt("SD CARD: ",                VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+  GUI_DispStringAt("sensor data upload:",      VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
+
+  // WIFI SSID
+  GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
   
   while(1) {
-    if (GUIDEMO_GET_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
+    // CHECK WIFI SSID
+    if (GUIDEMO_GET_ALL_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
       if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
-        GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+        GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
         GUI_DispCEOL();
-        GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+        GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
         snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_ssid_disp);
       }
     }
     else {
       if (strcmp(wifi_error_info, wifi_old_ssid)) {
-          GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+          GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
           GUI_DispCEOL();
-          GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+          GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
           snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
         } 
     }
 
-    for (int i = 0; i < 10; i++) {
-      if (key_flag != GUI_DEMO_PAGE_2)
-        return;
+    // check sd card
+    if (GUIDEMO_Check_SD_Card()) {
+      GUI_DispStringAtCEOL("READY",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+    }
+    else {
+      GUI_DispStringAtCEOL("NOT EXIST",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+    }
 
+    for (int i = 0; i < 10; i++) {
+      if (key_flag != GUI_DEMO_PAGE_1) {
+        // KEY stabilization
+        krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+        if (key_flag != GUI_DEMO_PAGE_INIT)
+          key_flag = GUI_DEMO_PAGE_2;
+        return;
+      }
       krhino_task_sleep(krhino_ms_to_ticks(100));
     }
   }
+}
+
+void GUIDEMO_G_Sensors()
+{
+#define G_SENSOR_X_START      30
+#define G_SENSOR_DATA_START   10
+#define G_SENSOR_Y_START      25
+#define G_SENSOR_Y_STEP       20
+
+  int xSize = LCD_GetXSize();
+  int32_t acc_adc_data[3] = {0};
+  float acc_nkg[3] = {0};
+  int32_t mag_data[3] = {0};
+  int32_t gyro_data[3] = {0};
+
+  sensor_all_open();
+
+  GUIDEMO_DrawBk(1);
+  GUI_SetColor(GUI_BLACK);
+  GUIDEMO_DrawBk(1);
+
+  // set font
+  GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font20_ASCII);
+
+  GUI_DispStringAt("acc_x",                G_SENSOR_X_START, G_SENSOR_Y_START);
+  GUI_DispStringAt("acc_y",                G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP);
+  GUI_DispStringAt("acc_z",                G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  2);
+  GUI_DispStringAt("mag_x",                G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  3);
+  GUI_DispStringAt("mag_y",                G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  4);
+  GUI_DispStringAt("mag_z",                G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  5);
+  GUI_DispStringAt("gyro_x",               G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  6);
+  GUI_DispStringAt("gyro_y",               G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  7);
+  GUI_DispStringAt("gyro_z",               G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  8);
+
+  // GUI_HWIN hWnd;
+  do{
+      // print value type
+#define N_KG_OFFSET  60
+      if (!get_acc_data(&acc_adc_data[0], &acc_adc_data[1], &acc_adc_data[2])) {
+        acc_nkg[0] = (float)acc_adc_data[0] * 9.8 / 1024;
+        acc_nkg[1] = (float)acc_adc_data[1] * 9.8 / 1024;
+        acc_nkg[2] = (float)acc_adc_data[2] * 9.8 / 1024;
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START);
+        GUI_DispCEOL();
+        GUI_DispFloatFix(acc_nkg[0], 7, 3);
+        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  1);
+        GUI_DispCEOL();
+        GUI_DispFloatFix(acc_nkg[1], 7, 3);
+        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START * 1);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  2);
+        GUI_DispCEOL();
+        GUI_DispFloatFix(acc_nkg[2], 7, 3);
+        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START * 2);
+      }
+      else {
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 2);
+      }
+
+      if (!get_mag_data(&mag_data[0], &mag_data[1], &mag_data[2])) {
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 3);
+        GUI_DispCEOL();
+        GUI_DispDec(mag_data[0], DEC_LEN_DEF);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 4);
+        GUI_DispCEOL();
+        GUI_DispDec(mag_data[1], DEC_LEN_DEF);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 5);
+        GUI_DispCEOL();
+        GUI_DispDec(mag_data[2], DEC_LEN_DEF);
+      }
+      else {
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  3);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  4);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  5);
+      }
+
+      if (!get_gyro_data(&gyro_data[0], &gyro_data[1], &gyro_data[2])) {
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 6);
+        GUI_DispCEOL();
+        GUI_DispDec(gyro_data[0], DEC_LEN_DEF);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 7);
+        GUI_DispCEOL();
+        GUI_DispDec(gyro_data[1], DEC_LEN_DEF);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 8);
+        GUI_DispCEOL();
+        GUI_DispDec(gyro_data[2], DEC_LEN_DEF);
+      }
+      else {
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  6);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  7);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  8);
+      }
+
+      int time_counter = 0;
+      for ( ; time_counter < 10; ++time_counter) {
+        if (key_flag != GUI_DEMO_PAGE_2) {
+          // KEY stabilization
+          krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+          if (key_flag != GUI_DEMO_PAGE_INIT)
+            key_flag = GUI_DEMO_PAGE_3;
+          return;
+        }
+        krhino_task_sleep(krhino_ms_to_ticks(100));
+      }
+  }while(1);
+}
+
+void GUIDEMO_Other_Sensors()
+{
+  #define OTHER_SENSOR_X_START      30
+  #define OTHER_SENSOR_DATA_START   20
+  #define OTHER_SENSOR_Y_START      30
+  #define OTHER_SENSOR_Y_STEP       25
+
+  int xSize = LCD_GetXSize();
+  uint32_t baro_data = 0;
+  int32_t temp_data = 0;
+  uint32_t humi_data = 0;
+  uint32_t als_data = 0;
+  uint32_t ps_data = 0;
+  int retry = 0;
+  int study_flag = -1;
+  sensor_all_open();
+
+  GUIDEMO_DrawBk(1);
+  GUI_SetColor(GUI_BLACK);
+  GUIDEMO_DrawBk(1);
+
+  // set font
+  GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font20_ASCII);
+
+  GUI_DispStringAt("barometer",            OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START);
+  GUI_DispStringAt("temperature",          OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP);
+  GUI_DispStringAt("humidity",             OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 2);
+  GUI_DispStringAt("als",                  OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 3);
+  GUI_DispStringAt("proximity",            OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
+  GUI_DispStringAt("irda",                 OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+
+  irda_flag = 0;
+
+  // GUI_HWIN hWnd;
+  do{
+    if (!get_baro_data(&baro_data)) {
+      GUI_GotoXY((xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START);
+      GUI_DispDec(baro_data, DEC_LEN_DEF);
+    }
+    else {
+      GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START);
+    }
+
+    if (!get_temp_data(&temp_data)) {
+      GUI_GotoXY((xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP);
+      GUI_DispDec(temp_data, DEC_LEN_DEF);
+    }
+    else {
+      GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP);
+    }
+    
+    if (!get_humi_data(&humi_data)) {
+      GUI_GotoXY((xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 2);
+      GUI_DispDec(humi_data, DEC_LEN_DEF);
+    }
+    else {
+      GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 2);
+    }
+
+    if (!get_als_data(&als_data)) {
+      GUI_GotoXY((xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 3);
+      GUI_DispDec(als_data, DEC_LEN_DEF);
+    }
+    else {
+      GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 3);
+    }
+    
+    if (!get_ps_data(&ps_data)) {
+      GUI_GotoXY((xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
+      GUI_DispDec(ps_data, DEC_LEN_DEF);
+    }
+    else {
+      GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
+    }
+
+    int to_clean = 0;
+    for (; retry < 2 && study_flag != 0; retry++) {
+      printf("begin study, retry %d \n", retry);
+      GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      GUI_DispCEOL();
+      GUI_DispStringHCenterAt("irda studying", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      to_clean = 1;
+
+      if (irda_study_code() == 0) {
+        study_flag = 0;
+        GUI_DispStringAtCEOL("OK", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+      }
+    }
+
+    if (study_flag != 0)
+      GUI_DispStringAtCEOL("FAIL", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+
+    if (to_clean) {
+      GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      GUI_DispCEOL();
+      to_clean = 0;
+    }
+
+    printf("irda_flag %d, study_flag %d 1065 \n", irda_flag, study_flag);
+    if (irda_flag == 1 && study_flag == 0) {
+      if (irda_send_code() == 0) {
+        printf("irda send success \n");
+        GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+        GUI_DispCEOL();
+        GUI_DispStringHCenterAt("irda send success", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      }
+      else {
+        printf("irda send fail \n");
+        GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+        GUI_DispCEOL();
+        GUI_DispStringHCenterAt("irda send fail", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      }
+    }
+
+    irda_flag = 0;
+    printf("irda_flag %d, study_flag %d 1085 \n", irda_flag, study_flag);
+
+    int time_counter = 0;
+    for ( ; time_counter < 10; ++time_counter) {
+      if (key_flag != GUI_DEMO_PAGE_3) {
+        // KEY stabilization
+        krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+        if (key_flag != GUI_DEMO_PAGE_INIT)
+          key_flag = GUI_DEMO_PAGE_4;
+        return;
+      }
+      krhino_task_sleep(krhino_ms_to_ticks(100));
+    }
+  }while(1);
+}
+
+void GUIDEMO_Loopback()
+{
+#define LOOPBACK_Y_OFFSET    110
+
+  GUIDEMO_DrawBk(1);
+  GUI_SetColor(GUI_BLACK);
+  GUIDEMO_DrawBk(1);
+
+  // set font
+  GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font24_ASCII);
+
+  int xSize = LCD_GetXSize();
+  GUI_GotoXY(0, LOOPBACK_Y_OFFSET);
+  GUI_DispCEOL();
+  GUI_DispStringHCenterAt("LoopBack", xSize >> 1, LOOPBACK_Y_OFFSET);
+
+  while (key_flag == GUI_DEMO_PAGE_5) {
+    krhino_task_sleep(krhino_ms_to_ticks(100));
+  }
+  // KEY stabilization
+  krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+  if (key_flag != GUI_DEMO_PAGE_INIT)
+    key_flag = GUI_DEMO_PAGE_6;
 }
 
 #if 0

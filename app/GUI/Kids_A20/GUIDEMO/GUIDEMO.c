@@ -105,7 +105,8 @@ static int     _HaltTimeStart;
 static int     _Halt;
 int             _Next;
 
-int   key_flag = GUI_DEMO_PAGE_2;
+int   key_flag = GUI_DEMO_PAGE_1;
+int   irda_flag = 0;
 static int display_count = 0;
 
 /*********************************************************************
@@ -433,23 +434,46 @@ static void _Main(void) {
   // show sensor data sheet
   // GUIDEMO_Unclassified();
 
-  while(key_flag != GUI_DEMO_PAGE_1) {
-    if (key_flag == GUI_DEMO_PAGE_2) {
-      // show version info
-      GUIDEMO_Version_Info();
-    }
-    else if (key_flag == GUI_DEMO_PAGE_3) {
-      // show sensor data sheet
-      GUIDEMO_Unclassified();
-    }
-    #if 0
-    else if (key_flag == GUI_DEMO_PAGE_4) {
-      // show sensor graph
-      GUIDEMO_Sensor_Graph();
-    }
-    #endif
-    else {
-        key_flag = GUI_DEMO_PAGE_2;
+  while(key_flag != GUI_DEMO_PAGE_4) {
+    switch(key_flag) {
+      case GUI_DEMO_PAGE_1: {
+        // show version info
+        GUIDEMO_Version_Info();
+        break;
+      }
+
+      case GUI_DEMO_PAGE_2: {
+        // show sensor data sheet
+        GUIDEMO_G_Sensors();
+        break;
+      }
+
+      case GUI_DEMO_PAGE_3: {
+        GUIDEMO_Other_Sensors();
+        break;
+      }
+#if 0
+      case GUI_DEMO_PAGE_4: {
+        GUIDEMO_WIFI_SSID();
+        break;
+      }
+#endif
+      case GUI_DEMO_PAGE_5: {
+        GUIDEMO_Loopback();
+        break;
+      }
+
+      case GUI_DEMO_PAGE_INIT: {
+        GUIDEMO_Intro();
+        GUIDEMO_Delay(1000);
+        key_flag = GUI_DEMO_PAGE_1;
+        break;
+      }
+
+      default: {
+        key_flag = GUI_DEMO_PAGE_1;
+        break;
+      }
     }
   }
 
@@ -470,7 +494,7 @@ void GUIDEMO_Main(void) {
   CameraDEMO_Main();
 
 	while(1) {
-    if (key_flag != GUI_DEMO_PAGE_1) {
+    if (key_flag != GUI_DEMO_PAGE_4) {
       GUI_Init();
       _Main();
       // GUI_Exit();
@@ -479,8 +503,12 @@ void GUIDEMO_Main(void) {
 	    GUI_Init();
       camera_dis_on = 1;
       while(1) {
-        if (key_flag != GUI_DEMO_PAGE_1) {
+        if (key_flag != GUI_DEMO_PAGE_4) {
     		  camera_dis_on = 0;
+          // KEY stabilization
+          krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+          if (key_flag != GUI_DEMO_PAGE_INIT)
+            key_flag = GUI_DEMO_PAGE_5;
     		  // GUI_Exit();
     		  break;
   		  }
