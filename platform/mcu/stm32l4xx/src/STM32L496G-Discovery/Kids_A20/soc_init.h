@@ -91,9 +91,9 @@ typedef enum {
 
 extern gpio_dev_t brd_gpio_table[];
 
-extern i2c_dev_t brd_i2c1_dev;
 extern i2c_dev_t brd_i2c2_dev;
 extern i2c_dev_t brd_i2c3_dev;
+extern i2c_dev_t brd_i2c4_dev;
 
 /* brd_lpuart1_dev compat for vfs.c which will be compiled in Travis Ci script */
 extern uart_dev_t uart_0;

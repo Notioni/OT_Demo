@@ -144,6 +144,18 @@ int32_t gpio_get_int_num(IRQn_Type *pirqn, uint8_t port)
         case GPIO_PIN_0:
             *pirqn = EXTI0_IRQn;
             break;
+        case GPIO_PIN_1:
+            *pirqn = EXTI1_IRQn;
+            break;
+        case GPIO_PIN_2:
+            *pirqn = EXTI2_IRQn;
+            break;
+        case GPIO_PIN_3:
+            *pirqn = EXTI3_IRQn;
+            break;
+        case GPIO_PIN_4:
+            *pirqn = EXTI4_IRQn;
+            break;
         case GPIO_PIN_5:
         case GPIO_PIN_6:
         case GPIO_PIN_7:

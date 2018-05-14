@@ -9,6 +9,7 @@
 #include "GUIDEMO.h"
 #include <aos/aos.h>
 #include <aos/uData.h>
+#include "isd9160.h"
 #ifdef CONFIG_AOS_FATFS_SUPPORT_MMC
 #include "fatfs.h"
 static const char *g_string         = "Fatfs test string.";
@@ -21,12 +22,17 @@ static const char *g_new_filepath   = "/sdcard/testDir/newname.txt";
 #endif
 #define DEMO_TASK_STACKSIZE    1024 //512*cpu_stack_t = 2048byte
 #define DEMO_TASK_PRIORITY     20
+#define ISD9160_TASK_STACKSIZE 1024 //512*cpu_stack_t = 2048byte
+#define ISD9160_TASK_PRIORITY  21
+
 #define WIFICMD_TASK_PRIORITY  21
 extern void wifi_cmd_task(void *arg);
 static ktask_t demo_task_obj;
+static ktask_t isd9160_task_obj;
 static ktask_t nt_task_obj;
 cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
 cpu_stack_t nt_task_buf[DEMO_TASK_STACKSIZE];
+cpu_stack_t isd9160_task_buf[ISD9160_TASK_STACKSIZE];
 static kinit_t kinit;
 extern int key_flag;
 static int old_key_flag;
@@ -214,6 +220,12 @@ void demo_task(void *arg)
     };
 }
 
+void isd9160_task(void *arg)
+{
+	krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+	isd9160_proc_loop();
+}
+
 int main(void)
 {
     krhino_init();
@@ -222,6 +234,9 @@ int main(void)
 
     krhino_task_create(&nt_task_obj, "wifi_cmd_task", 0,  WIFICMD_TASK_PRIORITY, 
         50, nt_task_buf, DEMO_TASK_STACKSIZE, wifi_cmd_task, 1);
+
+    krhino_task_create(&isd9160_task_obj, "isd9160_task", 0, ISD9160_TASK_PRIORITY, 
+        50, isd9160_task_buf, ISD9160_TASK_STACKSIZE, isd9160_task, 1);
 
     krhino_start();
     

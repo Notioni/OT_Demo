@@ -47,6 +47,8 @@ extern DCMI_HandleTypeDef hdcmi_handle;
 extern SD_HandleTypeDef sd_handle;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim16;
+extern DMA_HandleTypeDef hdma_sai2_a;
+extern SAI_HandleTypeDef hsai_BlockA2;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -236,6 +238,26 @@ void TIM1_CC_IRQHandler(void)
   //krhino_intrpt_enter();
   HAL_TIM_IRQHandler(&htim1);
   //krhino_intrpt_exit();
+}
+
+/**
+* @brief This function handles DMA1 channel6 global interrupt.
+*/
+void DMA1_Channel6_IRQHandler(void)
+{
+  krhino_intrpt_enter();
+  HAL_DMA_IRQHandler(&hdma_sai2_a);
+  krhino_intrpt_exit();
+}
+
+/**
+* @brief This function handles SAI2 global interrupt.
+*/
+void SAI2_IRQHandler(void)
+{
+  krhino_intrpt_enter();
+  HAL_SAI_IRQHandler(&hsai_BlockA2);
+  krhino_intrpt_exit();
 }
 
 /* USER CODE BEGIN 1 */

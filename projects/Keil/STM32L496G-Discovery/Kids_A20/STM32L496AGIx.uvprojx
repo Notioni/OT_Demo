@@ -605,6 +605,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L496G-Discovery\Kids_A20\irda.c</FilePath>
             </File>
+            <File>
+              <FileName>isd9160.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L496G-Discovery\Kids_A20\isd9160.c</FilePath>
+            </File>
+            <File>
+              <FileName>audio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L496G-Discovery\Kids_A20\audio.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
