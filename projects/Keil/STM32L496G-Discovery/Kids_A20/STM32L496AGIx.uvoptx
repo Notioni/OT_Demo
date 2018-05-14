@@ -150,50 +150,50 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>447</LineNumber>
+          <LineNumber>842</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134306562</Address>
+          <Address>134224732</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\..\..\..\app\GUI\Kids_A20\GUIDEMO\GUIDEMO.c</Filename>
+          <Filename>..\..\..\..\app\GUI\Kids_A20\GUIDEMO\GUIDEMO_Uncalssified.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\STM32L496AGIx\../../../../app/GUI/Kids_A20/GUIDEMO/GUIDEMO.c\447</Expression>
+          <Expression>\\STM32L496AGIx\../../../../app/GUI/Kids_A20/GUIDEMO/GUIDEMO_Uncalssified.c\842</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>444</LineNumber>
+          <LineNumber>73</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134305266</Address>
+          <Address>134244942</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\..\..\..\app\GUI\Kids_A20\GUIDEMO\GUIDEMO_Uncalssified.c</Filename>
+          <Filename>..\..\..\..\app\GUI\Kids_A20\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\STM32L496AGIx\../../../../app/GUI/Kids_A20/GUIDEMO/GUIDEMO_Uncalssified.c\444</Expression>
+          <Expression>\\STM32L496AGIx\../../../../app/GUI/Kids_A20/main.c\73</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>312</LineNumber>
+          <LineNumber>60</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134310498</Address>
+          <Address>134244896</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\..\..\..\app\GUI\Kids_A20\GUIDEMO\GUIDEMO_Uncalssified.c</Filename>
+          <Filename>..\..\..\..\app\GUI\Kids_A20\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\STM32L496AGIx\../../../../app/GUI/Kids_A20/GUIDEMO/GUIDEMO_Uncalssified.c\312</Expression>
+          <Expression>\\STM32L496AGIx\../../../../app/GUI/Kids_A20/main.c\60</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -648,7 +648,7 @@
 
   <Group>
     <GroupName>platform\mcu\stm32l4xx\src\STM32L496G-Discovery</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1864,7 +1864,7 @@
 
   <Group>
     <GroupName>app\ATDEMO</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

@@ -37,9 +37,28 @@ static kinit_t kinit;
 extern int key_flag;
 extern int irda_flag;
 // static int old_key_flag;
+
+int handing_shake()
+{
+       static sys_time_t last_time = 0;
+       sys_time_t now_time = 0;
+       int ret = 0;
+
+       now_time = krhino_sys_time_get();
+       if (now_time - last_time < 200) {
+               ret = 1;
+       }
+       last_time = now_time;
+
+       return ret;
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	GUI_KEY_A10 key = 0;
+
+  if (handing_shake())
+    return;
 
 	switch (GPIO_Pin) {
 		case KEY_1_Pin:
@@ -226,13 +245,13 @@ int main(void)
     krhino_init();
     krhino_task_create(&demo_task_obj, "demo_task", 0, DEMO_TASK_PRIORITY, 
         50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
-
+#if 0
     krhino_task_create(&nt_task_obj, "wifi_cmd_task", 0,  WIFICMD_TASK_PRIORITY, 
         50, nt_task_buf, DEMO_TASK_STACKSIZE, wifi_cmd_task, 1);
 
     krhino_task_create(&isd9160_task_obj, "isd9160_task", 0, ISD9160_TASK_PRIORITY, 
         50, isd9160_task_buf, ISD9160_TASK_STACKSIZE, isd9160_task, 1);
-
+#endif
     krhino_start();
     
     return 0;

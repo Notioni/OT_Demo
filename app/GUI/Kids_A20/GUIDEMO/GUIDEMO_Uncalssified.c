@@ -5,6 +5,7 @@
 // #include "audio.h"
 #include "atdemo.h"
 #include "irda.h"
+#include "isd9160.h"
 
 #if (SHOW_GUIDEMO_UNCLASSIFIED)
 
@@ -1042,16 +1043,16 @@ void GUIDEMO_Other_Sensors()
       if (irda_study_code() == 0) {
         study_flag = 0;
         GUI_DispStringAtCEOL("OK", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+        }
       }
-    }
 
-    if (study_flag != 0)
-      GUI_DispStringAtCEOL("FAIL", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+      if (study_flag != 0)
+        GUI_DispStringAtCEOL("FAIL", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
 
-    if (to_clean) {
-      GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
-      GUI_DispCEOL();
-      to_clean = 0;
+      if (to_clean) {
+        GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+        GUI_DispCEOL();
+        to_clean = 0;
     }
 
     printf("irda_flag %d, study_flag %d 1065 \n", irda_flag, study_flag);
@@ -1089,7 +1090,7 @@ void GUIDEMO_Other_Sensors()
 
 void GUIDEMO_Loopback()
 {
-#define LOOPBACK_Y_OFFSET    110
+#define LOOPBACK_Y_OFFSET    90
 
   GUIDEMO_DrawBk(1);
   GUI_SetColor(GUI_BLACK);
@@ -1099,18 +1100,48 @@ void GUIDEMO_Loopback()
   GUI_SetColor(GUI_WHITE);
   GUI_SetFont(&GUI_Font24_ASCII);
 
+  irda_flag = 0;
   int xSize = LCD_GetXSize();
   GUI_GotoXY(0, LOOPBACK_Y_OFFSET);
   GUI_DispCEOL();
   GUI_DispStringHCenterAt("LoopBack", xSize >> 1, LOOPBACK_Y_OFFSET);
+  GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 30);
+  GUI_DispCEOL();
+  GUI_DispStringHCenterAt("Press key A to upgrade", xSize >> 1, LOOPBACK_Y_OFFSET + 30);
 
-  while (key_flag == GUI_DEMO_PAGE_5) {
-    krhino_task_sleep(krhino_ms_to_ticks(100));
+  while(1) {
+
+      printf("irda_flag %d \n", irda_flag);
+      
+      if (irda_flag == 1) {
+        if (handle_upgrade() == 0) {
+          printf("isd9160 upgrade success irda_flag %d \n", irda_flag);
+          GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
+          GUI_DispCEOL();
+          GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 30);
+        }
+        else {
+          printf("isd9160 upgrade fail irda_flag %d \n", irda_flag);
+          GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
+          GUI_DispCEOL();
+          GUI_DispStringHCenterAt("isd9160 upgrade fail", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
+        }
+        irda_flag = 0;
+      }
+      
+      // irda_flag = 0;
+      printf("irda_flag %d \n", irda_flag);
+
+      if (key_flag != GUI_DEMO_PAGE_5) {
+        // KEY stabilization
+        krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+        if (key_flag != GUI_DEMO_PAGE_INIT)
+          key_flag = GUI_DEMO_PAGE_6;
+        return;
+      }
+      krhino_task_sleep(krhino_ms_to_ticks(100));
   }
-  // KEY stabilization
-  krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
-  if (key_flag != GUI_DEMO_PAGE_INIT)
-    key_flag = GUI_DEMO_PAGE_6;
+
 }
 
 #if 0
