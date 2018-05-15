@@ -1,6 +1,7 @@
 #include "isd9160.h"
 #include "stm32l4xx_hal.h"
 #include "k_api.h"
+#include "crc16.h"
 #include <string.h>
 
 #define ISD9160_I2C_ADDR                (0x15 << 1)
@@ -8,7 +9,7 @@
 #define ISD9160_ROM_SIZE                0x24400
 #define UPG_FRAME_HEAD_SIZE             sizeof(UPG_FRAME_HEAD)
 #define UPG_PAYLOAD_HAED_SIZE           sizeof(UPG_PAYLOAD_HEAD)
-#define UPG_PAYLOAD_DATA_SIZE           128
+#define UPG_PAYLOAD_DATA_SIZE           32
 #define SLAVE_DATA_MAX                  (UPG_PAYLOAD_HAED_SIZE + UPG_PAYLOAD_DATA_SIZE)
 #define UPG_FRAME_MAGIC                 0x18
 #define UPG_HINT_GRANU                  5
@@ -18,6 +19,8 @@
 #define UPG_FLASH_BASE                  ((256 << 10) + MCU_FLASH_START_ADDR)
 #define FLASH_MAGIC_HEAD                "9160"
 #define FLASH_MAGIC_FILE                0x20180511
+
+#define ISD9160_I2C_TIMEOUT             1000
 
 typedef enum {
 	I2C_CMD_SLPRT = 0,
@@ -113,6 +116,12 @@ static inline void ntoh_4(const uint8_t *data, uint32_t *value)
 	*value |= data[3] << (8 * 0);
 }
 
+static inline void hton_2(uint8_t *data, uint16_t value)
+{
+	data[0] = (value >> (8 * 1)) & 0xff;
+	data[1] = (value >> (8 * 0)) & 0xff;
+}
+
 static int upgf_init(void)
 {
 	uint32_t bin_size_total = 0;
@@ -159,12 +168,12 @@ static int isd9160_slprt_size(uint32_t *size)
 	uint8_t data = I2C_CMD_SLPRT;
 	uint8_t size_data[4] = {0};
 	
-	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, &data, 1, HAL_MAX_DELAY);
+	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, &data, 1, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
 	
-	ret = hal_i2c_master_recv(&brd_i2c4_dev, ISD9160_I2C_ADDR, size_data, 4, HAL_MAX_DELAY);
+	ret = hal_i2c_master_recv(&brd_i2c4_dev, ISD9160_I2C_ADDR, size_data, 4, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
@@ -176,7 +185,7 @@ static int isd9160_slprt_size(uint32_t *size)
 
 static int isd9160_slprt_data(uint8_t *data, uint32_t size)
 {
-	return hal_i2c_master_recv(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, size, HAL_MAX_DELAY);
+	return hal_i2c_master_recv(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, size, ISD9160_I2C_TIMEOUT);
 }
 
 static int handle_slprt(void)
@@ -232,12 +241,12 @@ static int get_upgresp(uint8_t *resp)
 	uint8_t data = I2C_CMD_RESPONSE;
 	int ret = 0;
 	
-	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, &data, 1, HAL_MAX_DELAY);
+	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, &data, 1, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
 	
-	return hal_i2c_master_recv(&brd_i2c4_dev, ISD9160_I2C_ADDR, resp, 1, HAL_MAX_DELAY);
+	return hal_i2c_master_recv(&brd_i2c4_dev, ISD9160_I2C_ADDR, resp, 1, ISD9160_I2C_TIMEOUT);
 }
 
 static int request_binsize(uint8_t *resp, uint32_t type, uint32_t size)
@@ -246,13 +255,13 @@ static int request_binsize(uint8_t *resp, uint32_t type, uint32_t size)
 	int ret = 0;
 	
 	data[0] = I2C_CMD_UPGRADE;
-	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, 1, HAL_MAX_DELAY);
+	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, 1, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
 	data[0] = (uint8_t)type;
 	hton_4(&data[1], size);
-	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, 5, HAL_MAX_DELAY);
+	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, 5, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
@@ -271,7 +280,7 @@ static int request_framehead(uint8_t *resp, uint8_t fsize)
 	
 	data[0] = UPG_FRAME_MAGIC;
 	data[1] = fsize;
-	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, 2, HAL_MAX_DELAY);
+	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, 2, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
@@ -287,18 +296,25 @@ static int request_payload(uint8_t *resp, uint32_t bintype, uint32_t bin_addr, u
 {
 	uint32_t isd9160_addr = 0;
 	uint8_t data[SLAVE_DATA_MAX] = {0};
+	uint16_t crc_size = 0;
+	uint16_t crc = 0;
 	int ret = 0;
 	
 	if (size > UPG_PAYLOAD_DATA_SIZE || offset + size > g_isd9160_map_table[bintype].size) {
 		return -1;
 	}
 	
-	/* calc crc checksum */
-	
 	isd9160_addr = g_isd9160_map_table[bintype].addr + offset;
 	hton_4(&data[2], isd9160_addr);
 	memcpy(&data[UPG_PAYLOAD_HAED_SIZE], (void *)(bin_addr + offset), size);
-	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, UPG_PAYLOAD_HAED_SIZE + size, HAL_MAX_DELAY);
+	crc_size = size + UPG_PAYLOAD_HAED_SIZE - 2;
+	if (crc_size % 2) {
+		data[UPG_PAYLOAD_HAED_SIZE + size] = 0xff;
+		++crc_size;
+	}
+	crc = crc16(&data[2], crc_size);
+	hton_2(data, crc);
+	ret = hal_i2c_master_send(&brd_i2c4_dev, ISD9160_I2C_ADDR, data, UPG_PAYLOAD_HAED_SIZE + size, ISD9160_I2C_TIMEOUT);
 	if (ret != 0) {
 		return ret;
 	}
@@ -310,19 +326,20 @@ static int request_payload(uint8_t *resp, uint32_t bintype, uint32_t bin_addr, u
 	return 0;
 }
 
-static void hint_percent(uint32_t now_bytes, uint32_t total_bytes)
+static void hint_percent(uint32_t now_bytes, uint32_t total_bytes, int bintype)
 {
 	static uint32_t last_quotient = 0;
 	uint32_t now_quotient = 0;
+	const char *str_type[] = {"LDROM", "APROM", "DATAROM"};
 	
 	if (now_bytes == 0 || total_bytes == 0) {
-		printf("isd9160 upgrade current progress is 0%%\n");
+		printf("isd9160 upgrade %s current progress is 0%%\n", str_type[bintype]);
 		last_quotient = 0;
 		return;
 	}
 	now_quotient = now_bytes * UPG_HINT_DIV / total_bytes;
 	if (now_quotient > last_quotient) {
-		printf("isd9160 upgrade current progress is %u%%\n", now_quotient * UPG_HINT_GRANU);
+		printf("isd9160 upgrade %s current progress is %u%%\n", str_type[bintype], now_quotient * UPG_HINT_GRANU);
 		last_quotient = now_quotient;
 	}
 }
@@ -345,7 +362,7 @@ static int send_upgrade(FLASH_FILE_HEAD *file_head, uint32_t bin_addr)
 		return -1;
 	}
 	remain_bytes = file_head->size - send_bytes;
-	hint_percent(0, 0);
+	hint_percent(0, 0, file_head->bintype);
 	while (remain_bytes > 0) {
 		frame_size = remain_bytes < UPG_PAYLOAD_DATA_SIZE ?
 								 (uint8_t)remain_bytes + UPG_PAYLOAD_HAED_SIZE : SLAVE_DATA_MAX;
@@ -358,6 +375,7 @@ static int send_upgrade(FLASH_FILE_HEAD *file_head, uint32_t bin_addr)
 			KIDS_A10_PRT("request_framehead return response abnormal, resp = 0x%02x.\n", resp);
 			return -1;
 		}
+RESEND:
 		ret = request_payload(&resp, file_head->bintype, bin_addr, send_bytes, frame_size - UPG_PAYLOAD_HAED_SIZE);
 		if (ret != 0) {
 			KIDS_A10_PRT("request_payload return failed.\n");
@@ -367,7 +385,8 @@ static int send_upgrade(FLASH_FILE_HEAD *file_head, uint32_t bin_addr)
 			if (resp == RESP_UPG_ALL_SUCCESS) {
 				
 			} else if (resp == RESP_UPG_PAYLOAD_CRC) {
-				continue;
+				printf("CRC checksum error, send_bytes %u, resend data.\n", send_bytes);
+				goto RESEND;
 			} else {
 				KIDS_A10_PRT("request_payload return response abnormal, resp = 0x%02x.\n", resp);
 				return -1;
@@ -375,7 +394,7 @@ static int send_upgrade(FLASH_FILE_HEAD *file_head, uint32_t bin_addr)
 		}
 		send_bytes += frame_size - UPG_PAYLOAD_HAED_SIZE;
 		remain_bytes = file_head->size - send_bytes;
-		hint_percent(send_bytes, file_head->size);
+		hint_percent(send_bytes, file_head->size, file_head->bintype);
 	}
 	
 	if (resp != RESP_UPG_ALL_SUCCESS) {

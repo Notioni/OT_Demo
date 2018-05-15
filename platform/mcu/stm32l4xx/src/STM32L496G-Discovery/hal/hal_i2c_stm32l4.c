@@ -172,6 +172,10 @@ int32_t hal_i2c_finalize(i2c_dev_t *i2c)
             I2C3_DeInit();
             ret = 0;
             break;
+        case AOS_PORT_I2C4:
+            I2C4_DeInit();
+            ret = 0;
+            break;
         default:
             break;
     }
@@ -224,9 +228,9 @@ static void I2C1_MspInit(I2C_HandleTypeDef *hi2c)
 
         /* Configure I2C Rx/Tx as alternate function  */
         GPIO_InitStructure.Pin       = I2C1_GPIO_SCL_PIN;
-        GPIO_InitStructure.Mode      = GPIO_MODE_AF_OD;
-        GPIO_InitStructure.Pull      = GPIO_PULLUP;
-        GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStructure.Mode      = I2C1_GPIO_MODE;
+        GPIO_InitStructure.Pull      = I2C1_GPIO_PULL;
+        GPIO_InitStructure.Speed     = I2C1_GPIO_SPEED;
         GPIO_InitStructure.Alternate = I2C1_GPIO_ALTERNATE;
         HAL_GPIO_Init(I2C1_GPIO_SCL_PORT, &GPIO_InitStructure);
         GPIO_InitStructure.Pin       = I2C1_GPIO_SDA_PIN;
@@ -321,9 +325,9 @@ static void I2C2_MspInit(I2C_HandleTypeDef *hi2c)
 
         /* Configure I2C Rx/Tx as alternate function  */
         GPIO_InitStructure.Pin       = I2C2_GPIO_SCL_PIN;
-        GPIO_InitStructure.Mode      = GPIO_MODE_AF_OD;
-        GPIO_InitStructure.Pull      = GPIO_PULLUP;
-        GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStructure.Mode      = I2C2_GPIO_MODE;
+        GPIO_InitStructure.Pull      = I2C2_GPIO_PULL;
+        GPIO_InitStructure.Speed     = I2C2_GPIO_SPEED;
         GPIO_InitStructure.Alternate = I2C2_GPIO_ALTERNATE;
         HAL_GPIO_Init(I2C2_GPIO_SCL_PORT, &GPIO_InitStructure);
         GPIO_InitStructure.Pin       = I2C2_GPIO_SDA_PIN;
@@ -418,9 +422,9 @@ static void I2C3_MspInit(I2C_HandleTypeDef *hi2c)
 
         /* Configure I2C Rx/Tx as alternate function  */
         GPIO_InitStructure.Pin       = I2C3_GPIO_SCL_PIN;
-        GPIO_InitStructure.Mode      = GPIO_MODE_AF_OD;
-        GPIO_InitStructure.Pull      = GPIO_PULLUP;
-        GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStructure.Mode      = I2C3_GPIO_MODE;
+        GPIO_InitStructure.Pull      = I2C3_GPIO_PULL;
+        GPIO_InitStructure.Speed     = I2C3_GPIO_SPEED;
         GPIO_InitStructure.Alternate = I2C3_GPIO_ALTERNATE;
         HAL_GPIO_Init(I2C3_GPIO_SCL_PORT, &GPIO_InitStructure);
         GPIO_InitStructure.Pin       = I2C3_GPIO_SDA_PIN;
@@ -515,9 +519,9 @@ static void I2C4_MspInit(I2C_HandleTypeDef *hi2c)
 
         /* Configure I2C Rx/Tx as alternate function  */
         GPIO_InitStructure.Pin       = I2C4_GPIO_SCL_PIN;
-        GPIO_InitStructure.Mode      = GPIO_MODE_AF_OD;
-        GPIO_InitStructure.Pull      = GPIO_PULLUP;
-        GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStructure.Mode      = I2C4_GPIO_MODE;
+        GPIO_InitStructure.Pull      = I2C4_GPIO_PULL;
+        GPIO_InitStructure.Speed     = I2C4_GPIO_SPEED;
         GPIO_InitStructure.Alternate = I2C4_GPIO_ALTERNATE;
         HAL_GPIO_Init(I2C4_GPIO_SCL_PORT, &GPIO_InitStructure);
         GPIO_InitStructure.Pin       = I2C4_GPIO_SDA_PIN;
