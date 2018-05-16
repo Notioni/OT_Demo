@@ -245,13 +245,13 @@ int main(void)
     krhino_init();
     krhino_task_create(&demo_task_obj, "demo_task", 0, DEMO_TASK_PRIORITY, 
         50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
-#if 0
+
     krhino_task_create(&nt_task_obj, "wifi_cmd_task", 0,  WIFICMD_TASK_PRIORITY, 
         50, nt_task_buf, DEMO_TASK_STACKSIZE, wifi_cmd_task, 1);
 
     krhino_task_create(&isd9160_task_obj, "isd9160_task", 0, ISD9160_TASK_PRIORITY, 
         50, isd9160_task_buf, ISD9160_TASK_STACKSIZE, isd9160_task, 1);
-#endif
+
     krhino_start();
     
     return 0;

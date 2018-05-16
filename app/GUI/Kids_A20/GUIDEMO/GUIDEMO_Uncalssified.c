@@ -773,6 +773,17 @@ static int GUIDEMO_Check_SD_Card()
   return 1;
 }
 
+static int gui_wifi_ssid_timer (int* counter, int count) {
+  if (*counter == 0 || *counter == count) {
+    *counter = 1;
+    return 1;
+  }
+  else {
+    (*counter)++;
+    return 0;
+  }
+}
+
 void GUIDEMO_Version_Info (void)
 {
   #define VERSION_X_OFFSET     20
@@ -797,6 +808,7 @@ void GUIDEMO_Version_Info (void)
   char wifi_ssid_disp[WIFI_SSID_DISP_LEN] = {0};
   char wifi_old_ssid[WIFI_SSID_DISP_LEN] = {0};
   int xSize = LCD_GetXSize();
+  int counter = 0;
 
   // display version info
   GUI_DispStringAt("HW version: A20_1_12",     VERSION_X_OFFSET, VERSION_Y_START);
@@ -809,30 +821,33 @@ void GUIDEMO_Version_Info (void)
   GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
   
   while(1) {
-    // CHECK WIFI SSID
-    if (GUIDEMO_GET_ALL_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
-      if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
-        GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
-        GUI_DispCEOL();
-        GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
-        snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_ssid_disp);
-      }
-    }
-    else {
-      if (strcmp(wifi_error_info, wifi_old_ssid)) {
-          GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
-          GUI_DispCEOL();
-          GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
-          snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
-        } 
-    }
-
     // check sd card
     if (GUIDEMO_Check_SD_Card()) {
       GUI_DispStringAtCEOL("READY",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
     }
     else {
       GUI_DispStringAtCEOL("NOT EXIST",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+    }
+
+    // every 10 s run once
+    if (gui_wifi_ssid_timer(&counter, 30)) {
+      // CHECK WIFI SSID
+      if (GUIDEMO_GET_ALL_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
+        if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
+          GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
+          GUI_DispCEOL();
+          GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
+          snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_ssid_disp);
+        }
+      }
+      else {
+        if (strcmp(wifi_error_info, wifi_old_ssid)) {
+            GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
+            GUI_DispCEOL();
+            GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
+            snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
+          } 
+      }
     }
 
     for (int i = 0; i < 10; i++) {
@@ -969,7 +984,7 @@ void GUIDEMO_Other_Sensors()
   uint32_t humi_data = 0;
   uint32_t als_data = 0;
   uint32_t ps_data = 0;
-  int retry = 0;
+  // int retry = 0;
   int study_flag = -1;
   sensor_all_open();
 
@@ -1032,6 +1047,30 @@ void GUIDEMO_Other_Sensors()
       GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
     }
 
+    // press key A to study
+    if (study_flag != 0 && irda_flag == 1) {
+      // study
+      printf("begin study\n");
+      GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      GUI_DispCEOL();
+      GUI_DispStringHCenterAt("irda studying", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+
+      if (irda_study_code() == 0) {
+        study_flag = 0;
+        GUI_DispStringAtCEOL("OK", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+      }
+      else {
+        GUI_DispStringAtCEOL("FAIL", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
+      }
+
+      // init key value
+      irda_flag = 0;
+
+      // clear display
+      GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
+      GUI_DispCEOL();
+    }
+#if 0
     int to_clean = 0;
     for (; retry < 2 && study_flag != 0; retry++) {
       printf("begin study, retry %d \n", retry);
@@ -1054,9 +1093,9 @@ void GUIDEMO_Other_Sensors()
         GUI_DispCEOL();
         to_clean = 0;
     }
-
-    printf("irda_flag %d, study_flag %d 1065 \n", irda_flag, study_flag);
-    if (irda_flag == 1 && study_flag == 0) {
+#endif
+    printf("%s(%d), irda_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, irda_flag, study_flag);
+    if (study_flag == 0 && irda_flag == 1) {
       if (irda_send_code() == 0) {
         printf("irda send success \n");
         GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
@@ -1072,7 +1111,7 @@ void GUIDEMO_Other_Sensors()
     }
 
     irda_flag = 0;
-    printf("irda_flag %d, study_flag %d 1085 \n", irda_flag, study_flag);
+    printf("%s(%d), irda_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, irda_flag, study_flag);
 
     int time_counter = 0;
     for ( ; time_counter < 10; ++time_counter) {
