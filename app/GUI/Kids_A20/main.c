@@ -35,7 +35,7 @@ cpu_stack_t nt_task_buf[DEMO_TASK_STACKSIZE];
 cpu_stack_t isd9160_task_buf[ISD9160_TASK_STACKSIZE];
 static kinit_t kinit;
 extern int key_flag;
-extern int irda_flag;
+extern int key_a_flag;
 // static int old_key_flag;
 
 int handing_shake()
@@ -67,7 +67,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			break;
 		case KEY_2_Pin:
 			key = GUI_KEY_2;
-      irda_flag = 1;
+      key_a_flag = 1;
 			break;
 		case KEY_3_Pin:
 			key = GUI_KEY_3;

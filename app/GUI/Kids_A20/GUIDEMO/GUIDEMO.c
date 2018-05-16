@@ -106,7 +106,7 @@ static int     _Halt;
 int             _Next;
 
 int   key_flag = GUI_DEMO_PAGE_1;
-int   irda_flag = 0;
+int   key_a_flag = 0;
 static int display_count = 0;
 
 /*********************************************************************

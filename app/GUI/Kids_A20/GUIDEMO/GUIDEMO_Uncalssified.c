@@ -86,7 +86,7 @@ static GUI_COLOR _aColorData_sensor[MAX_NUM_DATA_OBJ] = {
 };
 #endif
 extern int key_flag;
-extern int irda_flag;
+extern int key_a_flag;
 
 static int sensor_all_open(void)
 {
@@ -819,7 +819,7 @@ void GUIDEMO_Version_Info (void)
 
   // WIFI SSID
   GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
-  
+
   while(1) {
     // check sd card
     if (GUIDEMO_Check_SD_Card()) {
@@ -830,7 +830,7 @@ void GUIDEMO_Version_Info (void)
     }
 
     // every 10 s run once
-    if (gui_wifi_ssid_timer(&counter, 30)) {
+    if (gui_wifi_ssid_timer(&counter, 60)) {
       // CHECK WIFI SSID
       if (GUIDEMO_GET_ALL_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
         if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
@@ -976,7 +976,7 @@ void GUIDEMO_Other_Sensors()
   #define OTHER_SENSOR_X_START      30
   #define OTHER_SENSOR_DATA_START   20
   #define OTHER_SENSOR_Y_START      30
-  #define OTHER_SENSOR_Y_STEP       25
+  #define OTHER_SENSOR_Y_STEP       30
 
   int xSize = LCD_GetXSize();
   uint32_t baro_data = 0;
@@ -1001,10 +1001,11 @@ void GUIDEMO_Other_Sensors()
   GUI_DispStringAt("humidity",             OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 2);
   GUI_DispStringAt("als",                  OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 3);
   GUI_DispStringAt("proximity",            OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
+#if 0 // disable irda
   GUI_DispStringAt("irda",                 OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
 
-  irda_flag = 0;
-
+  key_a_flag = 0;
+#endif
   // GUI_HWIN hWnd;
   do{
     if (!get_baro_data(&baro_data)) {
@@ -1047,8 +1048,9 @@ void GUIDEMO_Other_Sensors()
       GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
     }
 
+#if 0 // disable irda
     // press key A to study
-    if (study_flag != 0 && irda_flag == 1) {
+    if (study_flag != 0 && key_a_flag == 1) {
       // study
       printf("begin study\n");
       GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
@@ -1064,38 +1066,15 @@ void GUIDEMO_Other_Sensors()
       }
 
       // init key value
-      irda_flag = 0;
+      key_a_flag = 0;
 
       // clear display
       GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
       GUI_DispCEOL();
     }
-#if 0
-    int to_clean = 0;
-    for (; retry < 2 && study_flag != 0; retry++) {
-      printf("begin study, retry %d \n", retry);
-      GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
-      GUI_DispCEOL();
-      GUI_DispStringHCenterAt("irda studying", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
-      to_clean = 1;
 
-      if (irda_study_code() == 0) {
-        study_flag = 0;
-        GUI_DispStringAtCEOL("OK", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
-        }
-      }
-
-      if (study_flag != 0)
-        GUI_DispStringAtCEOL("FAIL", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
-
-      if (to_clean) {
-        GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
-        GUI_DispCEOL();
-        to_clean = 0;
-    }
-#endif
-    printf("%s(%d), irda_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, irda_flag, study_flag);
-    if (study_flag == 0 && irda_flag == 1) {
+    printf("%s(%d), key_a_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, key_a_flag, study_flag);
+    if (study_flag == 0 && key_a_flag == 1) {
       if (irda_send_code() == 0) {
         printf("irda send success \n");
         GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
@@ -1110,8 +1089,9 @@ void GUIDEMO_Other_Sensors()
       }
     }
 
-    irda_flag = 0;
-    printf("%s(%d), irda_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, irda_flag, study_flag);
+    key_a_flag = 0;
+    printf("%s(%d), key_a_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, key_a_flag, study_flag);
+#endif
 
     int time_counter = 0;
     for ( ; time_counter < 10; ++time_counter) {
@@ -1139,7 +1119,7 @@ void GUIDEMO_Loopback()
   GUI_SetColor(GUI_WHITE);
   GUI_SetFont(&GUI_Font24_ASCII);
 
-  irda_flag = 0;
+  key_a_flag = 0;
   int xSize = LCD_GetXSize();
   GUI_GotoXY(0, LOOPBACK_Y_OFFSET);
   GUI_DispCEOL();
@@ -1150,26 +1130,26 @@ void GUIDEMO_Loopback()
 
   while(1) {
 
-      printf("irda_flag %d \n", irda_flag);
+      printf("key_a_flag %d \n", key_a_flag);
       
-      if (irda_flag == 1) {
+      if (key_a_flag == 1) {
         if (handle_upgrade() == 0) {
-          printf("isd9160 upgrade success irda_flag %d \n", irda_flag);
+          printf("isd9160 upgrade success key_a_flag %d \n", key_a_flag);
           GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
           GUI_DispCEOL();
           GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 30);
         }
         else {
-          printf("isd9160 upgrade fail irda_flag %d \n", irda_flag);
+          printf("isd9160 upgrade fail key_a_flag %d \n", key_a_flag);
           GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
           GUI_DispCEOL();
           GUI_DispStringHCenterAt("isd9160 upgrade fail", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
         }
-        irda_flag = 0;
+        key_a_flag = 0;
       }
       
-      // irda_flag = 0;
-      printf("irda_flag %d \n", irda_flag);
+      // key_a_flag = 0;
+      // printf("key_a_flag %d \n", key_a_flag);
 
       if (key_flag != GUI_DEMO_PAGE_5) {
         // KEY stabilization
