@@ -496,7 +496,7 @@ void GUIDEMO_Main(void) {
 	while(1) {
     if (key_flag != GUI_DEMO_PAGE_4) {
       _Main();
-      // GUI_Exit();
+      GUI_Exit();
     }
     else {
 	    GUI_Init();
