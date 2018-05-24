@@ -490,12 +490,11 @@ void GUIDEMO_Main(void) {
   // _Main();
 
 //  while (1) {
-
+  GUI_Init();
   CameraDEMO_Main();
 
 	while(1) {
     if (key_flag != GUI_DEMO_PAGE_4) {
-      GUI_Init();
       _Main();
       // GUI_Exit();
     }
