@@ -9,7 +9,7 @@
 #define ISD9160_ROM_SIZE                0x24400
 #define UPG_FRAME_HEAD_SIZE             sizeof(UPG_FRAME_HEAD)
 #define UPG_PAYLOAD_HAED_SIZE           sizeof(UPG_PAYLOAD_HEAD)
-#define UPG_PAYLOAD_DATA_SIZE           32
+#define UPG_PAYLOAD_DATA_SIZE           128
 #define SLAVE_DATA_MAX                  (UPG_PAYLOAD_HAED_SIZE + UPG_PAYLOAD_DATA_SIZE)
 #define UPG_FRAME_MAGIC                 0x18
 #define UPG_HINT_GRANU                  5
@@ -442,12 +442,9 @@ END:
 	return ret;
 }
 
-void isd9160_proc_loop()
+int isd9160_loop_once(void)
 {
-	while (1) {
-		handle_slprt();
-		krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
-	}
+	return handle_slprt();
 }
 
 void isd9160_reset(void)
