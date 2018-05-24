@@ -173,6 +173,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	++pwm_send_counter;
 }
 
+void light_ir(int enable)
+{
+	uint32_t action = enable ? TIM_FORCED_ACTIVE : TIM_FORCED_INACTIVE;
+
+	TIM_ForcedOC1Config(action);
+}
+
 static void ir_dbg(void)
 {
 	int i;
