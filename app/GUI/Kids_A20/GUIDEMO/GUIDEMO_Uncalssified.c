@@ -11,7 +11,7 @@
 
 #define Y_START          43
 #define Y_STEP           25
-#define DEC_LEN_DEF      6
+#define DEC_LEN_DEF      7
 
 #define GUIDEMO_UNCLASSIFIED_OFFSET 30
 
@@ -149,6 +149,114 @@ static int sensor_all_open(void)
 	fd_gyro = fd;
 
 	return 0;
+}
+
+static int open_G_sensor()
+{
+	int fd = -1;
+
+	fd = aos_open(dev_acc_path, O_RDWR);
+	if (fd < 0) {
+		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
+		// return -1;
+	}
+	fd_acc = fd;
+
+  fd = aos_open(dev_mag_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: mag_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_mag = fd;
+
+  fd = aos_open(dev_gyro_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: gyro_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_gyro = fd;
+
+  return 0;
+}
+
+static void close_G_sensor()
+{
+  if (aos_close(fd_acc) != 0) {
+    KIDS_A10_PRT("close acc sensor fail \n");
+  }
+
+  if (aos_close(fd_mag) != 0) {
+    KIDS_A10_PRT("close mag sensor fail \n");
+  }
+
+  if (aos_close(fd_gyro) != 0) {
+    KIDS_A10_PRT("close gyro sensor fail \n");
+  }
+}
+
+static int open_other_sensor()
+{
+  int fd = -1;
+
+  fd = aos_open(dev_baro_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_baro = fd;
+
+  fd = aos_open(dev_temp_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_temp = fd;
+
+  fd = aos_open(dev_humi_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_humi = fd;
+
+  fd = aos_open(dev_als_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_als = fd;
+
+  fd = aos_open(dev_ps_path, O_RDWR);
+  if (fd < 0) {
+    KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
+    // return -1;
+  }
+  fd_ps = fd;
+
+  return 0;
+}
+
+static void close_other_sensor()
+{
+  if (aos_close(fd_baro) != 0) {
+    KIDS_A10_PRT("close acc sensor fail \n");
+  }
+
+  if (aos_close(fd_temp) != 0) {
+    KIDS_A10_PRT("close acc sensor fail \n");
+  }
+
+  if (aos_close(fd_humi) != 0) {
+    KIDS_A10_PRT("close acc sensor fail \n");
+  }
+
+  if (aos_close(fd_als) != 0) {
+    KIDS_A10_PRT("close acc sensor fail \n");
+  }
+
+  if (aos_close(fd_ps) != 0) {
+    KIDS_A10_PRT("close acc sensor fail \n");
+  }
 }
 
 static int get_acc_data(int32_t *x, int32_t *y, int32_t *z)
@@ -751,20 +859,20 @@ static int GUIDEMO_Check_SD_Card()
   const char* test_string = "Fatfs test string.";
 
   int ret; 
-  printf(" Fatfs write test\n");
+  // printf(" Fatfs write test\n");
   int fd = aos_open(test_file_path, O_RDWR | O_CREAT | O_TRUNC);
-  printf("aos_open , ret = %d\n", fd);
+  // printf("aos_open , ret = %d\n", fd);
   if (fd < 0)
     return 0;
 
   ret = aos_write(fd, test_string, strlen(test_string));
-  printf("aos_write , ret = %d\n", ret);
+  // printf("aos_write , ret = %d\n", ret);
   if (ret < 0) {
     return 0;
   }
 
   ret = aos_sync(fd);
-  printf("aos_sync , ret = %d\n", ret);
+  // printf("aos_sync , ret = %d\n", ret);
   if (ret < 0) {
     return 0;
   }
@@ -866,9 +974,9 @@ void GUIDEMO_Version_Info (void)
 void GUIDEMO_G_Sensors()
 {
 #define G_SENSOR_X_START      30
-#define G_SENSOR_DATA_START   10
-#define G_SENSOR_Y_START      25
-#define G_SENSOR_Y_STEP       20
+#define G_SENSOR_DATA_START   0
+#define G_SENSOR_Y_START      15
+#define G_SENSOR_Y_STEP       23
 
   int xSize = LCD_GetXSize();
   int32_t acc_adc_data[3] = {0};
@@ -876,7 +984,7 @@ void GUIDEMO_G_Sensors()
   int32_t mag_data[3] = {0};
   int32_t gyro_data[3] = {0};
 
-  sensor_all_open();
+  open_G_sensor();
 
   GUIDEMO_DrawBk(1);
   GUI_SetColor(GUI_BLACK);
@@ -899,7 +1007,7 @@ void GUIDEMO_G_Sensors()
   // GUI_HWIN hWnd;
   do{
       // print value type
-#define N_KG_OFFSET  60
+#define N_KG_OFFSET  70
       if (!get_acc_data(&acc_adc_data[0], &acc_adc_data[1], &acc_adc_data[2])) {
         acc_nkg[0] = (float)acc_adc_data[0] * 9.8 / 1024;
         acc_nkg[1] = (float)acc_adc_data[1] * 9.8 / 1024;
@@ -911,11 +1019,11 @@ void GUIDEMO_G_Sensors()
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  1);
         GUI_DispCEOL();
         GUI_DispFloatFix(acc_nkg[1], 7, 3);
-        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START * 1);
+        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 1);
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  2);
         GUI_DispCEOL();
         GUI_DispFloatFix(acc_nkg[2], 7, 3);
-        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START * 2);
+        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 2);
       }
       else {
         GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START);
@@ -924,13 +1032,13 @@ void GUIDEMO_G_Sensors()
       }
 
       if (!get_mag_data(&mag_data[0], &mag_data[1], &mag_data[2])) {
-        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 3);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 3);
         GUI_DispCEOL();
         GUI_DispDec(mag_data[0], DEC_LEN_DEF);
-        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 4);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 4);
         GUI_DispCEOL();
         GUI_DispDec(mag_data[1], DEC_LEN_DEF);
-        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 5);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 5);
         GUI_DispCEOL();
         GUI_DispDec(mag_data[2], DEC_LEN_DEF);
       }
@@ -941,13 +1049,13 @@ void GUIDEMO_G_Sensors()
       }
 
       if (!get_gyro_data(&gyro_data[0], &gyro_data[1], &gyro_data[2])) {
-        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 6);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 6);
         GUI_DispCEOL();
         GUI_DispDec(gyro_data[0], DEC_LEN_DEF);
-        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 7);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 7);
         GUI_DispCEOL();
         GUI_DispDec(gyro_data[1], DEC_LEN_DEF);
-        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START * 8);
+        GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 8);
         GUI_DispCEOL();
         GUI_DispDec(gyro_data[2], DEC_LEN_DEF);
       }
@@ -964,6 +1072,8 @@ void GUIDEMO_G_Sensors()
           krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
           if (key_flag != GUI_DEMO_PAGE_INIT)
             key_flag = GUI_DEMO_PAGE_3;
+
+          close_G_sensor();
           return;
         }
         krhino_task_sleep(krhino_ms_to_ticks(100));
@@ -986,7 +1096,7 @@ void GUIDEMO_Other_Sensors()
   uint32_t ps_data = 0;
   // int retry = 0;
   int study_flag = -1;
-  sensor_all_open();
+  open_other_sensor();
 
   GUIDEMO_DrawBk(1);
   GUI_SetColor(GUI_BLACK);
@@ -1100,6 +1210,8 @@ void GUIDEMO_Other_Sensors()
         krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
         if (key_flag != GUI_DEMO_PAGE_INIT)
           key_flag = GUI_DEMO_PAGE_4;
+
+        close_other_sensor();
         return;
       }
       krhino_task_sleep(krhino_ms_to_ticks(100));
@@ -1129,15 +1241,13 @@ void GUIDEMO_Loopback()
   GUI_DispStringHCenterAt("Press key A to upgrade", xSize >> 1, LOOPBACK_Y_OFFSET + 30);
 
   while(1) {
-
-      printf("key_a_flag %d \n", key_a_flag);
-      
+      // printf("key_a_flag %d \n", key_a_flag);
       if (key_a_flag == 1) {
         if (handle_upgrade() == 0) {
           printf("isd9160 upgrade success key_a_flag %d \n", key_a_flag);
           GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
           GUI_DispCEOL();
-          GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 30);
+          GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
         }
         else {
           printf("isd9160 upgrade fail key_a_flag %d \n", key_a_flag);
@@ -1147,7 +1257,7 @@ void GUIDEMO_Loopback()
         }
         key_a_flag = 0;
       }
-      
+
       // key_a_flag = 0;
       // printf("key_a_flag %d \n", key_a_flag);
 
@@ -1160,7 +1270,6 @@ void GUIDEMO_Loopback()
       }
       krhino_task_sleep(krhino_ms_to_ticks(100));
   }
-
 }
 
 #if 0
