@@ -977,6 +977,7 @@ void GUIDEMO_G_Sensors()
 #define G_SENSOR_DATA_START   0
 #define G_SENSOR_Y_START      15
 #define G_SENSOR_Y_STEP       23
+#define N_KG_OFFSET           75
 
   int xSize = LCD_GetXSize();
   int32_t acc_adc_data[3] = {0};
@@ -1004,26 +1005,31 @@ void GUIDEMO_G_Sensors()
   GUI_DispStringAt("gyro_y",               G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  7);
   GUI_DispStringAt("gyro_z",               G_SENSOR_X_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  8);
 
+  GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START);
+  GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 1);
+  GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 2);
+
   // GUI_HWIN hWnd;
   do{
-      // print value type
-#define N_KG_OFFSET  70
       if (!get_acc_data(&acc_adc_data[0], &acc_adc_data[1], &acc_adc_data[2])) {
         acc_nkg[0] = (float)acc_adc_data[0] * 9.8 / 1024;
         acc_nkg[1] = (float)acc_adc_data[1] * 9.8 / 1024;
         acc_nkg[2] = (float)acc_adc_data[2] * 9.8 / 1024;
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispFloatFix(acc_nkg[0], 7, 3);
-        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START);
+        GUI_DispString("  ");
+        // GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START);
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  1);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispFloatFix(acc_nkg[1], 7, 3);
-        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 1);
+        GUI_DispString("  ");
+        // GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 1);
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  2);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispFloatFix(acc_nkg[2], 7, 3);
-        GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 2);
+        GUI_DispString("  ");
+        // GUI_DispStringAt("N/kg", (xSize >> 1) + G_SENSOR_DATA_START + N_KG_OFFSET, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 2);
       }
       else {
         GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START);
@@ -1033,14 +1039,17 @@ void GUIDEMO_G_Sensors()
 
       if (!get_mag_data(&mag_data[0], &mag_data[1], &mag_data[2])) {
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 3);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispDec(mag_data[0], DEC_LEN_DEF);
+        GUI_DispString("  ");
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 4);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispDec(mag_data[1], DEC_LEN_DEF);
+        GUI_DispString("  ");
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 5);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispDec(mag_data[2], DEC_LEN_DEF);
+        GUI_DispString("  ");
       }
       else {
         GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  3);
@@ -1050,14 +1059,17 @@ void GUIDEMO_G_Sensors()
 
       if (!get_gyro_data(&gyro_data[0], &gyro_data[1], &gyro_data[2])) {
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 6);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispDec(gyro_data[0], DEC_LEN_DEF);
+        GUI_DispString(" ");
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 7);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispDec(gyro_data[1], DEC_LEN_DEF);
+        GUI_DispString(" ");
         GUI_GotoXY((xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP * 8);
-        GUI_DispCEOL();
+        // GUI_DispCEOL();
         GUI_DispDec(gyro_data[2], DEC_LEN_DEF);
+        GUI_DispString(" ");
       }
       else {
         GUI_DispStringAtCEOL("unknow", (xSize >> 1) + G_SENSOR_DATA_START, G_SENSOR_Y_START + G_SENSOR_Y_STEP *  6);
@@ -1240,20 +1252,33 @@ void GUIDEMO_Loopback()
   GUI_DispCEOL();
   GUI_DispStringHCenterAt("Press key A to upgrade", xSize >> 1, LOOPBACK_Y_OFFSET + 30);
 
+  // set font
+  GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font20_ASCII);
+
+  static int update_flag = 0;
+
+  if (update_flag != 0) {
+    GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
+  }
+
   while(1) {
       // printf("key_a_flag %d \n", key_a_flag);
       if (key_a_flag == 1) {
-        if (handle_upgrade() == 0) {
-          printf("isd9160 upgrade success key_a_flag %d \n", key_a_flag);
-          GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
-          GUI_DispCEOL();
-          GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
-        }
-        else {
-          printf("isd9160 upgrade fail key_a_flag %d \n", key_a_flag);
-          GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
-          GUI_DispCEOL();
-          GUI_DispStringHCenterAt("isd9160 upgrade fail", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
+        if (update_flag == 0) {  // only upgrade once
+          if (handle_upgrade() == 0) {
+            // printf("isd9160 upgrade success key_a_flag %d \n", key_a_flag);
+            update_flag = 1;  // only update once
+            GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
+            GUI_DispCEOL();
+            GUI_DispStringHCenterAt("isd9160 upgrade success", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
+          }
+          else {
+            // printf("isd9160 upgrade fail key_a_flag %d \n", key_a_flag);
+            GUI_GotoXY(0, LOOPBACK_Y_OFFSET + 60);
+            GUI_DispCEOL();
+            GUI_DispStringHCenterAt("isd9160 upgrade fail", xSize >> 1, LOOPBACK_Y_OFFSET + 60);
+          }
         }
         key_a_flag = 0;
       }

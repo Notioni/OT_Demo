@@ -230,7 +230,7 @@ static ssize_t sensor_read(file_t *f, void *buf, size_t len)
         goto error;
     }
     
-    LOG("%s %s successfully\n", SENSOR_STR, __func__);
+    // LOG("%s %s successfully\n", SENSOR_STR, __func__);
     return len;
     
 error:
