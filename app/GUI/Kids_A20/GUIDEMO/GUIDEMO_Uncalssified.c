@@ -880,7 +880,7 @@ static int GUIDEMO_Check_SD_Card()
   aos_close(fd);
   return 1;
 }
-
+#if 0
 static int gui_wifi_ssid_timer (int* counter, int count) {
   if (*counter == 0 || *counter == count) {
     *counter = 1;
@@ -891,7 +891,7 @@ static int gui_wifi_ssid_timer (int* counter, int count) {
     return 0;
   }
 }
-
+#endif
 void GUIDEMO_Version_Info (void)
 {
   #define VERSION_X_OFFSET     20
@@ -916,11 +916,11 @@ void GUIDEMO_Version_Info (void)
   char wifi_ssid_disp[WIFI_SSID_DISP_LEN] = {0};
   char wifi_old_ssid[WIFI_SSID_DISP_LEN] = {0};
   int xSize = LCD_GetXSize();
-  int counter = 0;
+  int check_flag = 0;
 
   // display version info
   GUI_DispStringAt("HW version: A20_1_12",     VERSION_X_OFFSET, VERSION_Y_START);
-  GUI_DispStringAt("FW version: A20_V0.92",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
+  GUI_DispStringAt("FW version: A20_V0.93",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
   // GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   GUI_DispStringAt("SD CARD: ",                VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   GUI_DispStringAt("sensor data upload:",      VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
@@ -928,18 +928,26 @@ void GUIDEMO_Version_Info (void)
   // WIFI SSID
   GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
 
+  // init key_a_flag
+  key_a_flag = 0;
+
   while(1) {
     // check sd card
-    if (GUIDEMO_Check_SD_Card()) {
-      GUI_DispStringAtCEOL("READY",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
-    }
-    else {
-      GUI_DispStringAtCEOL("NOT EXIST",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+    // printf("check sd card start, key_flag %d \n", key_flag);
+    if (check_flag == 0) {
+      if (GUIDEMO_Check_SD_Card()) {
+        GUI_DispStringAtCEOL("READY",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+      }
+      else {
+        GUI_DispStringAtCEOL("NOT EXIST",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+      }
     }
 
+    // printf("check sd card end, key_flag %d \n", key_flag);
     // every 10 s run once
-    if (gui_wifi_ssid_timer(&counter, 60)) {
+    if (check_flag == 0 || key_a_flag == 1) {
       // CHECK WIFI SSID
+      printf("check wifi ssid start, key_flag %d \n", key_flag);
       if (GUIDEMO_GET_ALL_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
         if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
           GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 4 + WIFI_Y_OFFSET);
@@ -956,6 +964,9 @@ void GUIDEMO_Version_Info (void)
             snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
           } 
       }
+      key_a_flag = 0;
+      check_flag = 1;
+      printf("check wifi ssid end, key_flag %d \n", key_flag);
     }
 
     for (int i = 0; i < 10; i++) {
