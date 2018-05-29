@@ -84,8 +84,9 @@ typedef enum {
 	GPIO_USB_PCIE_SW,
 	GPIO_WIFI_RST,
 	GPIO_WIFI_WU,
-	GPIO_ZIGBEE_INT,
-	GPIO_ZIGBEE_RST,
+	//GPIO_ZIGBEE_INT,
+	//GPIO_ZIGBEE_RST,
+	GPIO_SE_RST,
 	MAX_GPIO_NUM
 } BOARD_GPIO;
 
@@ -127,6 +128,8 @@ extern uart_dev_t brd_uart3_dev;
 #define ZIGBEE_INT_Pin GPIO_PIN_8
 #define ZIGBEE_INT_GPIO_Port GPIOE
 #define ZIGBEE_INT_EXTI_IRQn EXTI9_5_IRQn
+#define SE_RST_Pin GPIO_PIN_8
+#define SE_RST_GPIO_Port GPIOE
 #define IR_IN_Pin GPIO_PIN_9
 #define IR_IN_GPIO_Port GPIOE
 #define IR_OUT_Pin GPIO_PIN_9

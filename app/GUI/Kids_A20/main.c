@@ -206,6 +206,17 @@ void test_sd_case(void)
 }
 #endif
 
+void test_se(void)
+{
+	char test[2][20];
+	int ret = 0;
+	ret = DeviceOpen(test);
+	if(ret == HAL_OK)
+		printf("DeviceOpen ok\n");
+	else
+		printf("DeviceOpen error\n");
+}
+
 void demo_task(void *arg)
 {
     int ret = 0;

@@ -335,8 +335,9 @@ gpio_dev_t brd_gpio_table[] = {
 	{USB_PCIE_SW, OUTPUT_PUSH_PULL, &gpio_set},
 	{WIFI_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{WIFI_WU, OUTPUT_PUSH_PULL, &gpio_set},
-	{ZIGBEE_INT, IRQ_MODE, &mode_rising},
-	{ZIGBEE_RST, OUTPUT_PUSH_PULL, &gpio_set},
+	//{ZIGBEE_INT, IRQ_MODE, &mode_rising},
+	//{ZIGBEE_RST, OUTPUT_PUSH_PULL, &gpio_set},
+	{SE_RST, OUTPUT_PUSH_PULL, &gpio_reset},
 };
 
 i2c_dev_t brd_i2c2_dev = {AOS_PORT_I2C2, {0}, NULL};
@@ -368,7 +369,7 @@ static void brd_peri_init(void)
 		hal_gpio_init(&brd_gpio_table[i]);
 	}
 	hal_uart_init(&uart_0);
-	hal_uart_init(&brd_uart2_dev);
+	//hal_uart_init(&brd_uart2_dev);
 	hal_uart_init(&brd_uart3_dev);
 	hal_i2c_init(&brd_i2c2_dev);
 	hal_i2c_init(&brd_i2c3_dev);
@@ -422,7 +423,7 @@ static void MX_GPIO_Init(void)
                           |ALS_LED_Pin|CAM_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LCD_PWR_GPIO_Port, LCD_PWR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, LCD_PWR_Pin|SE_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, HTS_LED_Pin|PS_LED_Pin|COMPASS_LED_Pin|AUDIO_WU_Pin 

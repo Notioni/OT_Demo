@@ -540,6 +540,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\platform\mcu\stm32l4xx\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_dma2d.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32l4xx_hal_smartcard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_smartcard.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32l4xx_hal_smartcard_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_smartcard_ex.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -614,6 +624,11 @@
               <FileName>audio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L496G-Discovery\Kids_A20\audio.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_smartcard_stm32l4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L496G-Discovery\hal\hal_smartcard_stm32l4.c</FilePath>
             </File>
           </Files>
         </Group>
