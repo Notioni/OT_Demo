@@ -464,8 +464,8 @@ static void _Main(void) {
       }
 
       case GUI_DEMO_PAGE_INIT: {
-        GUIDEMO_Intro();
-        GUIDEMO_Delay(1000);
+        // GUIDEMO_Intro();
+        // GUIDEMO_Delay(1000);
         key_flag = GUI_DEMO_PAGE_1;
         break;
       }
