@@ -68,6 +68,7 @@ void DMA2_Channel6_IRQHandler(void);
 void LPUART1_IRQHandler(void);
 void SAI2_IRQHandler(void);
 void DCMI_IRQHandler(void);
+void UART4_IRQHandler(void);
 
 #ifdef __cplusplus
 }

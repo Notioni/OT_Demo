@@ -44,6 +44,7 @@ extern UART_HandleTypeDef lpuart1_handle;
 //extern UART_HandleTypeDef uart2_handle;
 extern SMARTCARD_HandleTypeDef hsmartcard2;
 extern UART_HandleTypeDef uart3_handle;
+extern UART_HandleTypeDef uart4_handle;
 extern DCMI_HandleTypeDef hdcmi_handle;
 extern SD_HandleTypeDef sd_handle;
 extern TIM_HandleTypeDef htim1;
@@ -166,6 +167,16 @@ void USART3_IRQHandler(void)
 {
   krhino_intrpt_enter();
   HAL_UART_IRQHandler(&uart3_handle);
+  krhino_intrpt_exit();
+}
+
+/**
+* @brief This function handles UART4 global interrupt.
+*/
+void UART4_IRQHandler(void)
+{
+  krhino_intrpt_enter();
+  HAL_UART_IRQHandler(&uart4_handle);
   krhino_intrpt_exit();
 }
 

@@ -126,6 +126,40 @@
 
 #define UART3_IRQn                     USART3_IRQn
 
+/***************************** uart4 configure *******************************/
+//#define UART4                          UART4
+
+#define UART4_BANDRATE                 115200
+#define UART4_WORD_LENGTH              UART_WORDLENGTH_8B
+#define UART4_STOP_BITS                UART_STOPBITS_1
+#define UART4_PARITY                   UART_PARITY_NONE
+#define UART4_MODE                     UART_MODE_TX_RX
+#define UART4_HW_FLOW_CTL              UART_HWCONTROL_NONE
+#define UART4_OVER_SAMPLING            UART_OVERSAMPLING_16
+#define UART4_ONE_BIT_SAMPLING         UART_ONE_BIT_SAMPLE_DISABLE
+#define UART4_ADV_FEATURE_INIT         UART_ADVFEATURE_NO_INIT
+
+#define UART4_CLK_ENABLE()             __HAL_RCC_UART4_CLK_ENABLE()
+#define UART4_CLK_DISABLE()            __HAL_RCC_UART4_CLK_DISABLE()
+#define UART4_TX_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOA_CLK_ENABLE()
+#define UART4_TX_GPIO_CLK_DISABLE()    __HAL_RCC_GPIOA_CLK_DISABLE()
+#define UART4_RX_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOA_CLK_ENABLE()
+#define UART4_RX_GPIO_CLK_DISABLE()    __HAL_RCC_GPIOA_CLK_DISABLE()
+
+#define UART4_TX_PIN                   GPIO_PIN_0
+#define UART4_TX_MODE                  GPIO_MODE_AF_PP
+#define UART4_TX_SPEED                 GPIO_SPEED_FREQ_VERY_HIGH
+#define UART4_TX_PULL                  GPIO_NOPULL
+#define UART4_TX_ALTERNATE             GPIO_AF8_UART4
+#define UART4_TX_GPIO_PORT             GPIOA
+
+#define UART4_RX_PIN                   GPIO_PIN_1
+#define UART4_RX_MODE                  GPIO_MODE_AF_PP
+#define UART4_RX_ALTERNATE             GPIO_AF8_UART4
+#define UART4_RX_GPIO_PORT             GPIOA
+
+//#define UART4_IRQn                     UART4_IRQn
+
 #define MAX_BUF_UART_BYTES  4096
 
 #ifdef __cplusplus

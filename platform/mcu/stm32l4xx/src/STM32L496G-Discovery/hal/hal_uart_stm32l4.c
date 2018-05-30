@@ -24,6 +24,10 @@ static int32_t uart3_init(uart_dev_t *uart);
 static int32_t uart3_DeInit(void);
 static void uart3_MspInit(void);
 static void uart3_DeMspInit(void);
+static int32_t uart4_init(uart_dev_t *uart);
+static int32_t uart4_DeInit(void);
+static void uart4_MspInit(void);
+static void uart4_DeMspInit(void);
 
 /* function used to transform hal para to stm32l4 para */
 static int32_t uart_dataWidth_transform(hal_uart_data_width_t data_width_hal, uint32_t *data_width_stm32l4);
@@ -36,6 +40,7 @@ static int32_t uart_mode_transform(hal_uart_mode_t mode_hal, uint32_t *mode_stm3
 UART_HandleTypeDef lpuart1_handle;
 UART_HandleTypeDef uart2_handle;
 UART_HandleTypeDef uart3_handle;
+UART_HandleTypeDef uart4_handle;
 
 /* bufferQueue for uart */
 kbuf_queue_t g_buf_queue_lpuart1;
@@ -44,6 +49,8 @@ kbuf_queue_t g_buf_queue_uart2;
 char g_buf_uart2[MAX_BUF_UART_BYTES];
 kbuf_queue_t g_buf_queue_uart3;
 char g_buf_uart3[MAX_BUF_UART_BYTES];
+kbuf_queue_t g_buf_queue_uart4;
+char g_buf_uart4[MAX_BUF_UART_BYTES];
 
 int32_t hal_uart_init(uart_dev_t *uart)
 {
@@ -65,6 +72,10 @@ int32_t hal_uart_init(uart_dev_t *uart)
         case PORT_UART3:
             uart->priv = &uart3_handle;
             ret = uart3_init(uart);
+            break;
+	 case PORT_UART4:
+            uart->priv = &uart4_handle;
+            ret = uart4_init(uart);
             break;
         /* if ohter uart exist add init code here */
 
@@ -405,6 +416,90 @@ void uart3_DeMspInit(void)
     UART3_TX_GPIO_CLK_DISABLE();
     UART3_RX_GPIO_CLK_DISABLE();
 }
+
+int32_t uart4_init(uart_dev_t *uart)
+{
+    int32_t ret = 0;
+
+    uart4_handle.Instance                    = UART4;
+    uart4_handle.Init.BaudRate               = uart->config.baud_rate;
+
+    ret = uart_dataWidth_transform(uart->config.data_width, &uart4_handle.Init.WordLength);
+    ret |= uart_parity_transform(uart->config.parity, &uart4_handle.Init.Parity);
+    ret |= uart_stop_bits_transform(uart->config.stop_bits, &uart4_handle.Init.StopBits);
+    ret |= uart_flow_control_transform(uart->config.flow_control, &uart4_handle.Init.HwFlowCtl);
+    ret |= uart_mode_transform(uart->config.mode, &uart4_handle.Init.Mode);
+
+    if (ret != 0) {
+        return -1;
+    }
+
+    uart4_handle.Init.HwFlowCtl              = UART4_HW_FLOW_CTL;
+    uart4_handle.Init.OverSampling           = UART4_OVER_SAMPLING;
+    uart4_handle.Init.OneBitSampling         = UART4_ONE_BIT_SAMPLING;
+    uart4_handle.AdvancedInit.AdvFeatureInit = UART4_ADV_FEATURE_INIT;
+    uart4_handle.buffer_queue = &g_buf_queue_uart4;
+
+    /* init uart */
+    uart4_MspInit();
+    HAL_UART_Init(&uart4_handle);
+
+    ret = krhino_buf_queue_create(&g_buf_queue_uart4, "buf_queue_uart",
+        g_buf_uart4, MAX_BUF_UART_BYTES, 1);
+
+    return ret;
+}
+
+int32_t uart4_DeInit(void)
+{
+    int32_t ret = -1;
+
+    /* uart deinitialization */
+    ret = HAL_UART_DeInit(&uart4_handle);
+    uart4_DeMspInit();
+
+    return ret;
+}
+
+void uart4_MspInit(void)
+{
+    GPIO_InitTypeDef gpio_init_structure;
+    //GPIO_InitTypeDef GPIO_InitStruct;
+    /* Enable GPIO clock */
+    UART4_TX_GPIO_CLK_ENABLE();
+    UART4_RX_GPIO_CLK_ENABLE();
+
+    /* Enable USART clock */
+    UART4_CLK_ENABLE();
+
+    /* Configure USART Tx as alternate function */
+    gpio_init_structure.Pin       = UART4_TX_PIN;
+    gpio_init_structure.Mode      = UART4_TX_MODE;
+    gpio_init_structure.Speed     = UART4_TX_SPEED;
+    gpio_init_structure.Pull      = UART4_TX_PULL;
+    gpio_init_structure.Alternate = UART4_TX_ALTERNATE;
+    HAL_GPIO_Init(UART4_TX_GPIO_PORT, &gpio_init_structure);
+
+    /* Configure USART Rx as alternate function */
+    gpio_init_structure.Pin       = UART4_RX_PIN;
+    gpio_init_structure.Mode      = UART4_RX_MODE;
+    gpio_init_structure.Alternate = UART4_RX_ALTERNATE;
+    HAL_GPIO_Init(UART4_RX_GPIO_PORT, &gpio_init_structure);
+
+    HAL_NVIC_SetPriority(UART4_IRQn, UART_IRQ_PRIORITY, 1);
+    HAL_NVIC_EnableIRQ(UART4_IRQn);
+}
+
+void uart4_DeMspInit(void)
+{
+    /* Disable USART clock */
+    UART4_CLK_DISABLE();
+
+    /* USART TX/RX pins deinitializations */
+    UART4_TX_GPIO_CLK_DISABLE();
+    UART4_RX_GPIO_CLK_DISABLE();
+}
+
 
 int32_t uart_dataWidth_transform(hal_uart_data_width_t data_width_hal,
         uint32_t *data_width_stm32l4)

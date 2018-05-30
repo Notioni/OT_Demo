@@ -248,13 +248,14 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_UART4
                               |RCC_PERIPHCLK_LPUART1|RCC_PERIPHCLK_SAI2
                               |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_I2C3
                               |RCC_PERIPHCLK_I2C4|RCC_PERIPHCLK_USB
                               |RCC_PERIPHCLK_SDMMC1|RCC_PERIPHCLK_ADC;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
+  PeriphClkInit.Uart4ClockSelection = RCC_UART4CLKSOURCE_PCLK1;
   PeriphClkInit.Lpuart1ClockSelection = RCC_LPUART1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
   PeriphClkInit.I2c3ClockSelection = RCC_I2C3CLKSOURCE_PCLK1;
@@ -328,9 +329,9 @@ gpio_dev_t brd_gpio_table[] = {
 	{LCD_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{PCIE_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{PS_LED, OUTPUT_PUSH_PULL, &gpio_set},
-	{SECURE_CLK, OUTPUT_PUSH_PULL, &gpio_set},
-	{SECURE_IO, OUTPUT_PUSH_PULL, &gpio_set},
-	{SECURE_RST, OUTPUT_PUSH_PULL, &gpio_set},
+	//{SECURE_CLK, OUTPUT_PUSH_PULL, &gpio_set},
+	//{SECURE_IO, OUTPUT_PUSH_PULL, &gpio_set},
+	//{SECURE_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{SIM_DET, INPUT_HIGH_IMPEDANCE, NULL},
 	{USB_PCIE_SW, OUTPUT_PUSH_PULL, &gpio_set},
 	{WIFI_RST, OUTPUT_PUSH_PULL, &gpio_set},
@@ -359,7 +360,11 @@ uart_dev_t brd_uart3_dev = {
 	{UART3_BANDRATE, DATA_WIDTH_8BIT, NO_PARITY, STOP_BITS_1, FLOW_CONTROL_DISABLED, MODE_TX_RX},
 	NULL
 };
-
+uart_dev_t brd_uart4_dev = {
+	PORT_UART4,
+	{UART4_BANDRATE, DATA_WIDTH_8BIT, NO_PARITY, STOP_BITS_1, FLOW_CONTROL_DISABLED, MODE_TX_RX},
+	NULL
+};
 static void brd_peri_init(void)
 {
 	int i;
@@ -371,6 +376,7 @@ static void brd_peri_init(void)
 	hal_uart_init(&uart_0);
 	//hal_uart_init(&brd_uart2_dev);
 	hal_uart_init(&brd_uart3_dev);
+	hal_uart_init(&brd_uart4_dev);
 	hal_i2c_init(&brd_i2c2_dev);
 	hal_i2c_init(&brd_i2c3_dev);
 	hal_i2c_init(&brd_i2c4_dev);
