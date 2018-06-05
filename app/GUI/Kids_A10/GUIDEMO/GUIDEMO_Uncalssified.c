@@ -581,7 +581,13 @@ static int gui_wifi_ssid_timer (int* counter, int count) {
     return 1;
   }
 }
-
+#if 0
+static uint32_t test_at_cmd_request(enum at_cmd_e request_id, char *pInBuffer, char *pOutBuffer, uint16_t OutLength)
+{
+  snprintf(pOutBuffer, OutLength, "+WJAP:1100000000000000000000110000011,0");
+  return 0;
+}
+#endif
 static int GUIDEMO_GET_WIFI_SSID (char buf[], int len)
 {
 #define AT_STR_BUF_LEN     128
@@ -607,9 +613,12 @@ static int GUIDEMO_GET_WIFI_SSID (char buf[], int len)
     int copy_len = wifi_ssid_len < WIFI_SSID_MAX_LEN ? wifi_ssid_len : WIFI_SSID_MAX_LEN;
     strncpy(wifi_ssid, p_begin, copy_len);
     wifi_ssid[copy_len] = 0;
-    
-    snprintf(buf, len, "WiFi SSID: %s", wifi_ssid);
-		return 1;
+    // printf("%s\n", wifi_ssid);
+    if (strcmp(wifi_ssid, "0")) {
+      snprintf(buf, len, "%s", wifi_ssid);
+      return 1;
+    }
+
   }
   return 0;
 }
@@ -642,13 +651,13 @@ void GUIDEMO_Version_Info (void)
   // display version info
   GUI_DispStringAt("HW version: A10_1_11",     VERSION_X_OFFSET, VERSION_Y_START);
   GUI_DispStringAt("FW version: A10_V0.99",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
-  GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+  GUI_DispStringAt("Slogan: Alios Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   
   GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 2 + WIFI_Y_OFFSET);
   
   while(1) {
     if (gui_wifi_ssid_timer(&wifi_counter, WIFI_SSID_CLK)) {
-      KIDS_A10_PRT("get wifi ssid begin.\n");
+      // KIDS_A10_PRT("get wifi ssid begin.\n");
       if (GUIDEMO_GET_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
         if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
           GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
