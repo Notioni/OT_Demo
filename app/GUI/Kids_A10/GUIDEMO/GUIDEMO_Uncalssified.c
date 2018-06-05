@@ -7,16 +7,12 @@
 
 #if (SHOW_GUIDEMO_UNCLASSIFIED)
 
-#define Y_START          43
-#define Y_STEP           10
 #define DEC_LEN_DEF      5
-
-#define GUIDEMO_UNCLASSIFIED_OFFSET 20
 
 #define MAX_GRAPH_SIZE_X 440
 #define MAX_GRAPH_SIZE_Y (MAX_GRAPH_SIZE_X * 11) / 20
 
-#define DIST_TO_BORDER   10
+#define DIST_TO_BORDER   3
 #define DIST_TO_WIN      5
 
 #define BORDER_TOP       0
@@ -327,7 +323,7 @@ static void _Graph_Sensor_Demo()
   // GUIDEMO_DrawBk(1);
 
   xSize      = LCD_GetXSize();
-  ySize      = LCD_GetYSize();  // 256
+  ySize      = LCD_GetYSize();  // 240
   pEffectOld = WIDGET_SetDefaultEffect(&WIDGET_Effect_Simple);
   // Return a poninter to the previous callback routine
   // Set Callback function for background window
@@ -415,7 +411,14 @@ static void _Graph_Sensor_Demo()
 
 }
 
-void GUIDEMO_Unclassified(void) {
+void GUIDEMO_Unclassified(void)
+{
+#define Y_START          25
+#define Y_STEP           13
+#define GUIDEMO_UNCLASSIFIED_OFFSET        12
+#define GUIDEMO_UNCLASSIFIED_DATA_OFFSET   0
+#define N_KG_OFFSET    73
+
   int xSize = LCD_GetXSize();
 	int32_t acc_adc_data[3] = {0};
 	float acc_nkg[3] = {0};
@@ -425,6 +428,7 @@ void GUIDEMO_Unclassified(void) {
 	uint32_t als_data = 0;
 	uint32_t ps_data = 0;
   uint32_t step = 0;
+
 #if 0
 	if (sensor_all_open() != 0)
 		return;
@@ -446,12 +450,16 @@ void GUIDEMO_Unclassified(void) {
 
   // set font
 	GUI_SetColor(GUI_WHITE);
-  GUI_SetFont(&GUI_Font16_ASCII);
+  GUI_SetFont(&GUI_Font20_ASCII);
 
-  GUI_DispStringAt("step",                GUIDEMO_UNCLASSIFIED_OFFSET, Y_START);
-  GUI_DispStringAt("acc_x",               GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
-  GUI_DispStringAt("acc_y",               GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
-  GUI_DispStringAt("acc_z",               GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
+  GUI_DispStringAt("step",      GUIDEMO_UNCLASSIFIED_OFFSET, Y_START);
+  GUI_DispStringAt("acc_x",     GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
+  GUI_DispStringAt("acc_y",     GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
+  GUI_DispStringAt("acc_z",     GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
+  GUI_DispStringAt("N/kg",      (xSize >> 1) + N_KG_OFFSET, Y_START + Y_STEP *  2);
+  GUI_DispStringAt("N/kg",      (xSize >> 1) + N_KG_OFFSET, Y_START + Y_STEP *  4);
+  GUI_DispStringAt("N/kg",      (xSize >> 1) + N_KG_OFFSET, Y_START + Y_STEP *  6);
+
 #if 0
   GUI_DispStringAt("barometer",     GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
   GUI_DispStringAt("temperature",   GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
@@ -478,22 +486,26 @@ void GUIDEMO_Unclassified(void) {
 				acc_nkg[0] = (float)acc_adc_data[0] * 9.8 / 1024;
 				acc_nkg[1] = (float)acc_adc_data[1] * 9.8 / 1024;
 				acc_nkg[2] = (float)acc_adc_data[2] * 9.8 / 1024;
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START);
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START);
         GUI_DispDec(step, DEC_LEN_DEF);
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
+        GUI_DispString(" ");
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  2);
 				GUI_DispFloatFix(acc_nkg[0], 7, 3);
-				GUI_DispString(" N/kg");
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
+        GUI_DispString(" ");
+				// GUI_DispStringAt("N/kg");
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  4);
 				GUI_DispFloatFix(acc_nkg[1], 7, 3);
-				GUI_DispString(" N/kg");
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
+        GUI_DispString(" ");
+				// GUI_DispString(" N/kg");
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  6);
 				GUI_DispFloatFix(acc_nkg[2], 7, 3);
-				GUI_DispString(" N/kg");
+        GUI_DispString(" ");
+				// GUI_DispString(" N/kg");
       }
       else {
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  2);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  4);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  6);
       }
 #if 0
       if (!get_baro_data(&baro_data)) {
@@ -521,19 +533,19 @@ void GUIDEMO_Unclassified(void) {
       }
 #endif
 			if (!get_als_data(&als_data)) {
-        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
+        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  8);
         GUI_DispDec(als_data, DEC_LEN_DEF);
       }
       else {
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  8);
       }
 			
 			if (!get_ps_data(&ps_data)) {
-        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
+        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  10);
         GUI_DispDec(ps_data, DEC_LEN_DEF);
       }
       else {
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
+        GUI_DispStringAtCEOL("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_DATA_OFFSET, Y_START + Y_STEP *  10);
       }
 
       int time_counter = 0;
@@ -557,6 +569,17 @@ void GUIDEMO_Sensor_Graph (void)
   GUIDEMO_ShowInfoWin();
   _Graph_Sensor_Demo();
   // GUIDEMO_NotifyStartNext();
+}
+
+static int gui_wifi_ssid_timer (int* counter, int count) {
+  if (*counter < count) {
+    (*counter)++;
+    return 0;
+  }
+  else {
+    *counter = 0;
+    return 1;
+  }
 }
 
 static int GUIDEMO_GET_WIFI_SSID (char buf[], int len)
@@ -597,6 +620,7 @@ void GUIDEMO_Version_Info (void)
   #define VERSION_Y_START      45
   #define VERSION_Y_STEP       30
   #define WIFI_Y_OFFSET        40
+  #define WIFI_SSID_CLK        30
   // GUIDEMO_HideInfoWin();
   // GUIDEMO_ShowControlWin();
   // GUI_Exec();
@@ -613,6 +637,7 @@ void GUIDEMO_Version_Info (void)
   char wifi_ssid_disp[WIFI_SSID_DISP_LEN] = {0};
 	char wifi_old_ssid[WIFI_SSID_DISP_LEN] = {0};
   int xSize = LCD_GetXSize();
+  int wifi_counter = WIFI_SSID_CLK;
 
   // display version info
   GUI_DispStringAt("HW version: A10_1_11",     VERSION_X_OFFSET, VERSION_Y_START);
@@ -622,21 +647,24 @@ void GUIDEMO_Version_Info (void)
   GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 2 + WIFI_Y_OFFSET);
   
   while(1) {
-    if (GUIDEMO_GET_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
-      if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
-        GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
-        GUI_DispCEOL();
-        GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
-        snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_ssid_disp);
-      }
-    }
-    else {
-      if (strcmp(wifi_error_info, wifi_old_ssid)) {
+    if (gui_wifi_ssid_timer(&wifi_counter, WIFI_SSID_CLK)) {
+      KIDS_A10_PRT("get wifi ssid begin.\n");
+      if (GUIDEMO_GET_WIFI_SSID(wifi_ssid_disp, WIFI_SSID_DISP_LEN)) {
+        if (strcmp(wifi_ssid_disp, wifi_old_ssid)) {
           GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
           GUI_DispCEOL();
-          GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
-          snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
-        } 
+          GUI_DispStringHCenterAt(wifi_ssid_disp, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+          snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_ssid_disp);
+        }
+      }
+      else {
+        if (strcmp(wifi_error_info, wifi_old_ssid)) {
+            GUI_GotoXY(0, VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+            GUI_DispCEOL();
+            GUI_DispStringHCenterAt(wifi_error_info, (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 3 + WIFI_Y_OFFSET);
+            snprintf(wifi_old_ssid, WIFI_SSID_DISP_LEN, "%s", wifi_error_info);
+          } 
+      }
     }
 
     for (int i = 0; i < 10; i++) {
@@ -655,9 +683,10 @@ int sound_record;
 int sound_play;
 void GUIDEMO_Sound_record (void)
 {
-  #define INFO_START_X_OFFSET    40
-  #define INFO_START_Y_START     40
-  #define INFO_Y_STEP            20
+  #define INFO_START_Y_START     50
+  #define INFO_Y_STEP            30
+
+  int xSize = LCD_GetXSize();
 
   // GUIDEMO_HideInfoWin();
   // GUIDEMO_ShowControlWin();
@@ -671,8 +700,8 @@ void GUIDEMO_Sound_record (void)
   GUI_SetFont(&GUI_Font20_ASCII);
 
   // display notes
-  GUI_DispStringAt("Press key A to record",     INFO_START_X_OFFSET, INFO_START_Y_START);
-  GUI_DispStringAt("Press key B to play",       INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP);
+  GUI_DispStringHCenterAt("Press key A to record",     (xSize >> 1), INFO_START_Y_START);
+  GUI_DispStringHCenterAt("Press key B to play",       (xSize >> 1), INFO_START_Y_START + INFO_Y_STEP);
 
   sound_record = SOUND_FUN_IDLE;
   sound_play = SOUND_FUN_IDLE;
@@ -680,13 +709,13 @@ void GUIDEMO_Sound_record (void)
   while (key_flag == GUI_DEMO_PAGE_4) {
     if (sound_record == SOUND_FUN_EXECUTE) {
       // display on LED
-      GUI_DispStringAt("Recording...",     INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+      GUI_DispStringHCenterAt("Recording...",     (xSize >> 1), INFO_START_Y_START + INFO_Y_STEP * 3);
 
       // execute sound record
       record_to_flash();
       // krhino_task_sleep(krhino_ms_to_ticks(2000));
       // clean display
-      GUI_GotoXY(INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+      GUI_GotoXY(0, INFO_START_Y_START + INFO_Y_STEP * 3);
       GUI_DispCEOL();
 
       // set sound_record to idle
@@ -695,13 +724,13 @@ void GUIDEMO_Sound_record (void)
 
     if (sound_play == SOUND_FUN_EXECUTE) {
       // display on LED
-      GUI_DispStringAt("Playing...",       INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+      GUI_DispStringHCenterAt("Playing...",       (xSize >> 1), INFO_START_Y_START + INFO_Y_STEP * 3);
 
       // execute sound play
       playback_from_flash();
 
       // clean display
-      GUI_GotoXY(INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+      GUI_GotoXY(0, INFO_START_Y_START + INFO_Y_STEP * 3);
       GUI_DispCEOL();
 
       // set sound_play to idle
