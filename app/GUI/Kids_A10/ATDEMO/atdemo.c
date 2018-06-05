@@ -1163,6 +1163,7 @@ void wifi_cmd_task(void *arg)
 		icnt = 0;
 		memset(pOutBuffer, 0, sizeof(pOutBuffer));
 		memset(buff_cmd, 0, sizeof(buff_cmd));
+		#if 0
 		while(1){
 			gch = getchar();
 			//printf("gch = 0x%x\n", gch);
@@ -1192,7 +1193,29 @@ void wifi_cmd_task(void *arg)
 				}
 			}
 		}
-		
+		#else
+		while(1){
+			gch = getchar();
+			//printf("gch = 0x%x\n", gch);
+			if(icnt >= MAX_CMD_LEN){
+				printf("\r\ninput too long\r\n");
+				icnt = 0;
+			}
+			if((gch == '\r') || (gch == '\n')){
+				buff_cmd[icnt] = '\0';
+				icnt = 0;
+				if(strlen(buff_cmd) >= 2){
+					break;
+				}
+				else{
+					printf("\r\ninput error\r\n");
+					continue;
+				}	
+			}
+			else
+				buff_cmd[icnt++] = gch;
+		}
+		#endif
 		pre_hand_cmd(buff_cmd, cmd);
 		ret = look_up_cmd(cmd, &cmd_index);
 		if(ret != HAL_OK)
