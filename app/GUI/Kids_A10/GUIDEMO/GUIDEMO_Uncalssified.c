@@ -650,7 +650,7 @@ void GUIDEMO_Version_Info (void)
 
   // display version info
   GUI_DispStringAt("HW version: A10_1_11",     VERSION_X_OFFSET, VERSION_Y_START);
-  GUI_DispStringAt("FW version: A10_V0.99",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
+  GUI_DispStringAt("FW version: A10_V1.00",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
   GUI_DispStringAt("Slogan: Alios Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   
   GUI_DispStringHCenterAt("WiFi SSID:",        (xSize >> 1), VERSION_Y_START + VERSION_Y_STEP * 2 + WIFI_Y_OFFSET);
