@@ -96,6 +96,7 @@ CRC_HandleTypeDef hcrc;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
+SMARTCARD_HandleTypeDef hsmartcard2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -128,6 +129,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM17_Init(void);
 static void MX_TIM16_Init(void);
 static void MX_IRTIM_Init(void);
+static void Hal_Smartcard_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
@@ -177,6 +179,7 @@ void stm32_soc_init(void)
   MX_USART3_UART_Init();
 #endif
   /*xiehj add DMA2 config*/
+  Hal_Smartcard_Init();
   MX_DMA_Init();
   MX_ADC3_Init();
   MX_DCMI_Init();
@@ -711,6 +714,37 @@ static void MX_I2C4_Init(void)
 }
 #endif
 
+static void Hal_Smartcard_Init(void)
+{
+  /* USART Clock set to 4 MHz (PCLK1 (80 MHz) / 20) => prescaler set to 10 */
+  hsmartcard2.Instance = USART2;
+  hsmartcard2.Init.BaudRate = 10752;//10752; /*4MHz / 372*/
+  hsmartcard2.Init.WordLength = SMARTCARD_WORDLENGTH_9B;
+  hsmartcard2.Init.StopBits = SMARTCARD_STOPBITS_1_5;
+  hsmartcard2.Init.Parity = SMARTCARD_PARITY_EVEN;
+  hsmartcard2.Init.Mode = SMARTCARD_MODE_TX_RX;
+  hsmartcard2.Init.CLKPolarity = SMARTCARD_POLARITY_LOW;
+  hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
+  hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
+  hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
+  hsmartcard2.Init.Prescaler = 10;
+  hsmartcard2.Init.GuardTime = 1;
+  hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
+  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
+  hsmartcard2.Init.BlockLength = 0;
+  hsmartcard2.Init.AutoRetryCount = 3;
+  hsmartcard2.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_NO_INIT;
+  if (HAL_SMARTCARD_Init(&hsmartcard2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+    //return HAL_ERROR;
+  }
+  //printf("HAL_SMARTCARD_Init ok\n");
+  //krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
+  //SC_Reset(GPIO_PIN_SET);
+  
+  //return HAL_OK;
+}
 /* ADC3 init function */
 static void MX_ADC3_Init(void)
 {

@@ -216,6 +216,28 @@ void test_se(void)
 		printf("DeviceOpen ok\n");
 	else
 		printf("DeviceOpen error\n");
+	
+}
+
+void test_se1(void)
+{
+	//uint8_t ins[] = {
+	//	0x00, 0xA4, 0x04, 0x04, 0x10, 0xA0, 0x00, 0x00, 0x00, 0x30, 0x50, 0x00,
+	//	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49, 0x64, 0x32
+	//};
+	uint8_t retval = 0;
+	uint8_t ins[] = {0x00, 0x36, 0x00, 0x00,  0x03, 0x41, 0x00, 0x41};
+	uint8_t ins2[] = {0x00, 0xC0, 0x00, 0x00, 0x1D};
+	uint8_t ins_out[40] = {0};
+	uint8_t ii;
+	DeviceTransmit(NULL, ins, sizeof(ins), ins_out, sizeof(ins_out));
+	retval = DeviceTransmit(NULL, ins2, sizeof(ins2), ins_out, sizeof(ins_out));
+	if(retval){
+		printf("ins2 cmd error\n");
+		return;
+	}
+	for(ii = 0; ii < 0x1D + 2; ii++)
+		printf("ins_out[%d] = 0x%x\n", ii, ins_out[ii]);
 }
 
 void demo_task(void *arg)

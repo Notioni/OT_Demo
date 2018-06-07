@@ -45,6 +45,7 @@ typedef struct
   uint8_t INS;  /* Operation code */
   uint8_t P1;   /* Selection Mode */
   uint8_t P2;   /* Selection Option */
+  uint8_t P3;   /* LC or LE */
 } SC_Header;
 
 /* ADPU-Body command structure -----------------------------------------------*/
