@@ -37,6 +37,7 @@ cpu_stack_t daemon_task_buf[DAEMON_TASK_STACKSIZE];
 static kinit_t kinit;
 extern int key_flag;
 extern int key_a_flag;
+extern uint8_t sd_on;
 // static int old_key_flag;
 
 int handing_shake()
@@ -231,8 +232,8 @@ void demo_task(void *arg)
 #ifdef CONFIG_AOS_FATFS_SUPPORT_MMC	
 	ret = fatfs_register();
 	printf("reg_result = %d\n", ret);
-	//if(ret == 0)
-	//	test_sd_case();
+	if(ret == 0)
+		sd_on = 1;
 #endif
 
 		light_ir(1);
