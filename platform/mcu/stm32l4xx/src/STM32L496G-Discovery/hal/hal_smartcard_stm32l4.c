@@ -104,7 +104,7 @@ int32_t hal_smartcard_Init_r(void)
     return HAL_ERROR;
   }
   //printf("HAL_SMARTCARD_Init ok\n");
-  //krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
+  krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
   SC_Reset(GPIO_PIN_SET);
   
   return HAL_OK;
@@ -513,13 +513,16 @@ int SC_AnswerReq(void)
 	memset(SC_ATR_Table, 0, MAX_ATR_LENGTH);
 	memset(&g_card_atr, 0, sizeof(g_card_atr));
 	
-	//#if 1 //need to reinit in each session.
+	#if 0 //need to reinit in each session.
 	if(hal_smartcard_Init_r() != HAL_OK){
 		printf("hal_smartcard_Init error\n");
 		return HAL_ERROR;
 	}
-	//#endif 
-	printf("hal_smartcard_Init OK\n");
+	#endif
+	krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
+	SC_Reset(GPIO_PIN_SET);
+	
+	//printf("hal_smartcard_Init OK\n");
 	len = iso7816_get_atr(SC_ATR_Table);
 	if (len <= 0x0 || (SC_ATR_Table[0] != ATR_BYTE0)) {
             /* get error ATR */
@@ -538,7 +541,7 @@ void SC_Stop(void)
 {
   SC_Reset(GPIO_PIN_RESET);
   /* Deinitializes the SCHandle */
-  hal_smartcard_DeInit();
+  //hal_smartcard_DeInit();
 }
 
 static int string_to_apdu(SC_ADPU_Commands *apdu,
