@@ -312,7 +312,6 @@ void demo_task(void *arg)
 		sd_on = 1;
 #endif
 
-		light_ir(1);
     GUIDEMO_Main();
 
     while (1)
@@ -326,14 +325,8 @@ void demo_task(void *arg)
 
 void daemon_task(void *arg)
 {
-	static int turn_off = 0;
-
 	krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 	while (1) {
-		if (turn_off == 0 && krhino_sys_time_get() > 6000) {
-			turn_off = 1;
-			light_ir(0);
-		}
 		isd9160_loop_once();
 		krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 	}
