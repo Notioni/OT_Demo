@@ -336,7 +336,10 @@ gpio_dev_t brd_gpio_table[] = {
 	{USB_PCIE_SW, OUTPUT_PUSH_PULL, &gpio_set},
 	{WIFI_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{WIFI_WU, OUTPUT_PUSH_PULL, &gpio_set},
-	//{ZIGBEE_INT, IRQ_MODE, &mode_rising},
+	#ifdef LORA_MODULE
+	{ZIGBEE_INT, OUTPUT_PUSH_PULL, &gpio_set},
+	#endif
+  //{ZIGBEE_INT, IRQ_MODE, &mode_rising},
 	//{ZIGBEE_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{SE_RST, OUTPUT_PUSH_PULL, &gpio_reset},
 };

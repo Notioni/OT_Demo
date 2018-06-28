@@ -11,6 +11,12 @@ extern uart_dev_t brd_uart3_dev;
 
 //#define os_uart uart_0
 #define wifi_uart brd_uart3_dev
+
+#ifdef LORA_MODULE
+extern uart_dev_t brd_uart4_dev;
+#define lora_uart brd_uart4_dev
+#endif
+
 #define MAX_CMD_LEN 512
 #define MAX_OUT_LEN 2000
 static aos_mutex_t at_mutex;
@@ -930,6 +936,89 @@ static int at_get_common_func(enum at_cmd_e id, char *PInBuffer, char *pOutBuffe
 	return ret_val;
 }
 
+#ifdef LORA_MODULE
+static int match_lora_cmd(enum at_cmd_e id, int out_buffer_size, char* para_buffer, char out_buffer[]);
+
+static int lora_at_common_func(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, uint16_t OutLength)
+{
+#define LORA_GET_CMD_MAXLEN    32
+	int32_t ret_val = HAL_OK;
+	uint32_t recv_size = 0, recv_size_t = 0;
+	char send_cmd[LORA_GET_CMD_MAXLEN] = {0};
+  char print_buff[LORA_GET_CMD_MAXLEN * 2] = {0};
+	char Recv_ch;
+	uint8_t time_out = 0;
+  uint8_t retry = 0;
+  uint8_t response_received = 0;
+  // printf("id %d\n", id);
+  // match corresponding comand with id
+  if (match_lora_cmd(id, LORA_GET_CMD_MAXLEN, PInBuffer, send_cmd) != HAL_OK) {
+    return HAL_ERROR;
+  }
+  // printf("send_cmd %s\n", send_cmd);
+  // wake up lora module
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
+  krhino_task_sleep(1);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_RESET);
+  krhino_task_sleep(1);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
+
+LORA_GET_RETRY:
+  memset(pOutBuffer, 0, OutLength);
+  ret_val = hal_uart_send(&lora_uart, send_cmd, strlen(send_cmd), 30000);
+	if(ret_val != HAL_OK)
+		return HAL_ERROR;
+
+  while(1){
+    do {
+      ret_val = hal_uart_recv(&lora_uart, &Recv_ch, 1, &recv_size, 30000);
+      if(ret_val != HAL_OK){
+        time_out++;
+        if(time_out >= 3) {
+          if (response_received) {
+            return HAL_OK;
+          }
+
+          if (retry) {
+            return HAL_ERROR;
+          }
+          else {
+            time_out = 0;
+            recv_size_t = 0;
+            retry++;
+            krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/10);
+            goto LORA_GET_RETRY;
+          }
+        }
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/10);
+      }
+    }while(recv_size != 1);
+
+    time_out = 0;
+    *(pOutBuffer + recv_size_t) = Recv_ch;
+    recv_size_t++;
+    if(recv_size_t >= 5){
+      if(strstr(pOutBuffer, "OK+SLEEP:01\r\n") || strstr(pOutBuffer, "OK+SLEEP:00\r\n")){
+        snprintf(print_buff, LORA_GET_CMD_MAXLEN * 2, "%s", pOutBuffer);
+        printf("%s", print_buff);
+        recv_size_t = 0;
+        memset(pOutBuffer, 0, OutLength);
+      }
+
+      if (!response_received){
+        response_received = 1;
+      }
+    }
+
+    if(recv_size_t >= OutLength){
+      return HAL_ERROR;
+    }
+  }
+  return ret_val;
+}
+
+#endif
+
 static int at_fota_start(enum at_cmd_e id, char *PInBuffer, char *pOutBuffer, uint16_t OutLength)
 {
 	int32_t ret_val = HAL_OK;
@@ -1051,8 +1140,76 @@ static const struct at_ap_command at_cmds_table[] = {
     //FOTA
     { .id = AT_CMD_AT_FOTA, .pre_cmd = "AT+FOTA", .help = "AT+FOTA=<size>,<version>,<url>,<md5>", 
     		.function = at_fota_start },
+
+#ifdef LORA_MODULE
+    // LORA
+    { .id = AT_CMD_AT_, .pre_cmd = "AT+", .help = "AT+", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_RESET, .pre_cmd = "AT+RESET", .help = "AT+RESET", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_SAVE, .pre_cmd = "AT+SAVE", .help = "AT+SAVE", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_VERS_GET, .pre_cmd = "AT+VERS?", .help = "AT+VERS?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_BAUD_GET, .pre_cmd = "AT+BAUD?", .help = "AT+BAUD?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_BAUD_SET, .pre_cmd = "AT+BAUD=", .help = "AT+BAUD=<P1>; value range:0-9", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_CONFIRM_GET, .pre_cmd = "AT+CONFIRM?", .help = "AT+CONFIRM?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_CONFIRM_SET, .pre_cmd = "AT+CONFIRM=", .help = "AT+CONFIRM=<P1>; value range:0-1", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_NBTRIALS_GET, .pre_cmd = "AT+NBTRIALS?", .help = "AT+NBTRIALS?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_NBTRIALS_SET, .pre_cmd = "AT+NBTRIALS=", .help = "AT+NBTRIALS=<P1>; value range:1-8", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_ADR_GET, .pre_cmd = "AT+ADR?", .help = "AT+ADR?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_ADR_SET, .pre_cmd = "AT+ADR=", .help = "AT+ADR=<P1>; value range:0-1", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_CLASS_GET, .pre_cmd = "AT+CLASS?", .help = "AT+CLASS?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_CLASS_SET, .pre_cmd = "AT+CLASS=", .help = "AT+CLASS=<P1>; value range:0-1", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_PORT_GET, .pre_cmd = "AT+PORT?", .help = "AT+PORT?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_PORT_SET, .pre_cmd = "AT+PORT=", .help = "AT+PORT=<P1>; value range:2-220", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_LINK, .pre_cmd = "AT+LINK", .help = "AT+LINK", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_TIME, .pre_cmd = "AT+TIME", .help = "AT+TIME", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_TIME_GET, .pre_cmd = "AT+TIME?", .help = "AT+TIME?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_SIGNAL_GET, .pre_cmd = "AT+SIGNAL?", .help = "AT+SIGNAL?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_DATARATE_GET, .pre_cmd = "AT+DATARATE?", .help = "AT+DATARATE?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_DATARATE_SET, .pre_cmd = "AT+DATARATE=", .help = "AT+DATARATE=<P1>; value range:0-5", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_SEND_SET, .pre_cmd = "AT+SEND=",
+      .help = "AT+SEND=<P1>,<P2>,<P3>;P1:CONFIRM type,0-1;P2:NBTRIALS times,1-8;P3:data", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_SENDCK_SET, .pre_cmd = "AT+SENDCK=",
+      .help = "AT+SEND=<P1>,<P2>,<P3>,<P4>;P1:CONFIRM type,0-1;P2:NBTRIALS times,1-8;P3:data;P4:checksum", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_JOIN_GET, .pre_cmd = "AT+JOIN?", .help = "AT+JOIN?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_JOIN_SET, .pre_cmd = "AT+JOIN=", .help = "AT+JOIN=<P1>,<P2>,<P3>,<P4>; P1 or P1-P3 or P1-P4",
+      .function = lora_at_common_func },
+    { .id = AT_CMD_AT_SLEEP_SET, .pre_cmd = "AT+SLEEP=", .help = "AT+SLEEP=<P1>; value range:0-2", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_HEART, .pre_cmd = "AT+HEART", .help = "AT+HEART", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_HEART_GET, .pre_cmd = "AT+HEART?", .help = "AT+HEART?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_HEART_SET, .pre_cmd = "AT+HEART=", .help = "AT+HEART=<P1>; value range:0-1", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_CHANNEL_GET, .pre_cmd = "AT+CHANNEL?", .help = "AT+CHANNEL?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_CHANNEL_SET, .pre_cmd = "AT+CHANNEL=", .help = "AT+JOIN=<P1>,<P2>,<P3>,...,<Pn>;", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_DEVEUI_GET, .pre_cmd = "AT+DEVEUI?", .help = "AT+DEVEUI?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_APPEUI_GET, .pre_cmd = "AT+APPEUI?", .help = "AT+APPEUI?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_APPEUI_SET, .pre_cmd = "AT+APPEUI=", .help = "AT+ADR=<P1>", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_APPKEY_GET, .pre_cmd = "AT+APPKEY?", .help = "AT+APPKEY?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_APPKEY_SET, .pre_cmd = "AT+APPKEY=", .help = "AT+APPKEY=<P1>", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_POWER_GET, .pre_cmd = "AT+POWER?", .help = "AT+POWER?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_POWER_SET, .pre_cmd = "AT+POWER=", .help = "AT+POWER=<P1>; value range:0-5", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_AUTO_GET, .pre_cmd = "AT+AUTO?", .help = "AT+AUTO?", .function = lora_at_common_func },
+    { .id = AT_CMD_AT_AUTO_SET, .pre_cmd = "AT+AUTO=", .help = "AT+AUTO=<P1>,<P2>,<P3>", .function = lora_at_common_func },
+#endif
+
     { .id = AT_CMD_MAX, .help = "end", .function = NULL },
 };
+
+#ifdef LORA_MODULE
+static int match_lora_cmd(enum at_cmd_e id, int out_buffer_size, char* para_buffer, char out_buffer[])
+{
+  int table_size = sizeof(at_cmds_table) / sizeof(struct at_ap_command);
+  for (int i = 0; i < table_size; i++) {
+    if (at_cmds_table[i].id == id) {
+      if (para_buffer == NULL) {
+        snprintf(out_buffer, out_buffer_size, "%s\r\n", at_cmds_table[i].pre_cmd);
+      }
+      else {
+        snprintf(out_buffer, out_buffer_size, "%s%s\r\n", at_cmds_table[i].pre_cmd, para_buffer);
+      }
+      return HAL_OK;
+    }
+  }
+  return HAL_ERROR;
+}
+#endif
 
 uint32_t at_cmd_request(enum at_cmd_e request_id, char *pInBuffer, char *pOutBuffer, uint16_t OutLength)
 {
@@ -1106,6 +1263,22 @@ static void pre_hand_cmd(char *buff_cmd, char *cmd)
 	*cmd = '\0';
 }
 
+#ifdef LORA_MODULE
+static void lora_pre_hand_cmd(char *buff_cmd, char *cmd)
+{
+  char*p = buff_cmd;
+  while(*p) {
+    if (*p == ' ') {
+      p++;
+    }
+    else {
+      *cmd++ = *p++;
+    }
+  }
+  *cmd = '\0';
+}
+#endif
+
 static int look_up_cmd(char *buff, uint8_t *cmd_id)
 {
 	uint16_t cmd_index = 0; 
@@ -1123,7 +1296,7 @@ static int look_up_cmd(char *buff, uint8_t *cmd_id)
 	len = 0;
 	while(pre_cmd[len] && pre_cmd[len] != '=')
 		len++;
-	pre_cmd[len] = '\0';
+  pre_cmd[len] = '\0';
 	//printf("pre_cmd = %s\n", pre_cmd);
 	for(cmd_index = 0; ;cmd_index++){
 		if(at_cmds_table[cmd_index].id == AT_CMD_MAX){
@@ -1139,6 +1312,39 @@ static int look_up_cmd(char *buff, uint8_t *cmd_id)
 
 	return ret_val;
 }
+
+#ifdef LORA_MODULE
+static int lora_look_up_cmd(char *cmd_buff, uint8_t *cmd_id)
+{
+#define PRE_CMD_SIZE  128
+
+  if (!cmd_buff || !cmd_id)
+    return HAL_ERROR;
+
+  int str_len = strlen(cmd_buff) < PRE_CMD_SIZE ? strlen(cmd_buff) : PRE_CMD_SIZE;
+  if (str_len < 3)
+    return HAL_ERROR;
+
+  char pre_cmd[PRE_CMD_SIZE] = {0};
+  int copy_len = 0;
+  for (; copy_len < str_len; copy_len++) {
+    pre_cmd[copy_len] = cmd_buff[copy_len];
+    if (pre_cmd[copy_len] == '='){
+      break;
+    }
+  }
+  pre_cmd[++copy_len] = '\0';
+  int table_size = sizeof(at_cmds_table) / sizeof(struct at_ap_command);
+  for (int i = 0; i < table_size; i++) {
+    if (!strncmp(pre_cmd, at_cmds_table[i].pre_cmd, copy_len)) {
+      *cmd_id = at_cmds_table[i].id;
+      return HAL_OK;
+    }
+  }
+
+  return HAL_ERROR;
+}
+#endif
 
 void wifi_cmd_task(void *arg)
 {
@@ -1171,7 +1377,7 @@ void wifi_cmd_task(void *arg)
 		}
 	}
 	#endif
-	while(1){	
+	while(1){
 		cmd_index = 0xff;
 		icnt = 0;
 		memset(pOutBuffer, 0, sizeof(pOutBuffer));
@@ -1229,6 +1435,21 @@ void wifi_cmd_task(void *arg)
 				buff_cmd[icnt++] = gch;
 		}
 		#endif
+#ifdef LORA_MODULE
+    lora_pre_hand_cmd(buff_cmd, cmd);
+    ret = lora_look_up_cmd(cmd, &cmd_index);
+    if(ret != HAL_OK) {
+      ret = look_up_cmd(cmd, &cmd_index);
+    }
+
+		if(ret != HAL_OK)
+			continue;
+
+    pInBuffer = strstr(cmd, "=");
+    if (pInBuffer)
+      pInBuffer++;
+    printf("\n");
+#else
 		pre_hand_cmd(buff_cmd, cmd);
 		ret = look_up_cmd(cmd, &cmd_index);
 		if(ret != HAL_OK)
@@ -1237,6 +1458,7 @@ void wifi_cmd_task(void *arg)
 		pInBuffer = strstr(cmd, "=") + 1;
 		//printf("pInBuffer = %s\r\n", pInBuffer);
 		printf("\r\n");
+#endif
 		ret = at_cmd_request((enum at_cmd_e)cmd_index, pInBuffer, pOutBuffer, 2000);
 		if(ret == HAL_OK)
 			//printf("ret = %d\r\n", ret);
