@@ -37,6 +37,7 @@ cpu_stack_t daemon_task_buf[DAEMON_TASK_STACKSIZE];
 static kinit_t kinit;
 extern int key_flag;
 extern int key_a_flag;
+extern uint8_t sd_on;
 // static int old_key_flag;
 
 int handing_shake()
@@ -205,8 +206,8 @@ void test_sd_case(void)
         aos_close(fd);
 }
 #endif
-
-void test_se(void)
+#if 1
+int test_se1(void)
 {
 	char test[2][20];
 	int ret = 0;
@@ -215,8 +216,84 @@ void test_se(void)
 		printf("DeviceOpen ok\n");
 	else
 		printf("DeviceOpen error\n");
+
+	return ret;
+}
+void test_id2(void)
+{
+	uint8_t retval = 0;
+	uint8_t ins1[] = {0x00, 0xA4, 0x00, 0x04, 0x02, 0x3F, 0x00};
+	uint8_t ins2[] = {0x00, 0xA4, 0x00, 0x04, 0x02, 0x7F, 0x40};
+	uint8_t ins3[] = {0x00, 0xA4, 0x00, 0x04, 0x02, 0x6F, 0xF1};
+	uint8_t ins4[] = {0x00, 0xB0, 0x00, 0x00, 0x19 };
+	uint8_t ins_out[40] = {0};
+	uint8_t ii;
+	DeviceTransmit(NULL, ins1, sizeof(ins1), ins_out, sizeof(ins_out));
+	DeviceTransmit(NULL, ins2, sizeof(ins2), ins_out, sizeof(ins_out));
+	DeviceTransmit(NULL, ins3, sizeof(ins3), ins_out, sizeof(ins_out));
+	retval = DeviceTransmit(NULL, ins4, sizeof(ins4), ins_out, sizeof(ins_out));
+	if(retval){
+		printf("ins2 cmd error\n");
+		return;
+	}
+	for(ii = 0; ii < 0x19 + 2; ii++)
+		printf("ins_out[%d] = 0x%x\n", ii, ins_out[ii]);
 }
 
+int test_se2(void)
+{
+	//uint8_t ins[] = {
+	//	0x00, 0xA4, 0x04, 0x04, 0x10, 0xA0, 0x00, 0x00, 0x00, 0x30, 0x50, 0x00,
+	//	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49, 0x64, 0x32
+	//};
+	uint8_t retval = 0;
+	uint8_t ins[] = {0x00, 0x36, 0x00, 0x00,  0x03, 0x41, 0x00, 0x41};
+	uint8_t ins2[] = {0x00, 0xC0, 0x00, 0x00, 0x1D};
+	uint8_t ins_out[31] = {0};
+	uint8_t ins_resp[31] = {
+		0x41, 0x30, 0x30, 0x33, 0x43, 0x46, 0x41, 0x39, 0x43, 0x35, 
+		0x43, 0x44, 0x36, 0x46, 0x35, 0x30, 0x44, 0x45, 0x39, 0x43, 
+		0x32, 0x45, 0x33, 0x30, 0x30, 0x18, 0x00, 0x05, 0xde, 0x90, 0x00
+	};
+	uint8_t ii;
+	retval = DeviceTransmit(NULL, ins, sizeof(ins), ins_out, sizeof(ins_out));
+	if(retval){
+		printf("ins cmd error\n");
+		return HAL_ERROR;
+	}
+	retval = DeviceTransmit(NULL, ins2, sizeof(ins2), ins_out, sizeof(ins_out));
+	if(retval){
+		printf("ins2 cmd error\n");
+		return HAL_ERROR;
+	}
+	for(ii = 0; ii < 0x1D + 2; ii++){
+		if(ins_out[ii] != ins_resp[ii]){
+			return HAL_ERROR;
+		}
+	}
+	return HAL_OK;
+}
+
+void test_se3(void)
+{
+	DeviceClose(NULL);
+}
+
+int test_se(void)
+{
+	int ret = 0;
+	ret = test_se1();
+	if(ret)
+		return HAL_ERROR;
+	ret = test_se2();
+	if(ret)
+		return HAL_ERROR;
+	test_se3();
+	printf("test se ok\n");
+	return HAL_OK;
+}
+
+#endif
 void demo_task(void *arg)
 {
     int ret = 0;
@@ -231,11 +308,10 @@ void demo_task(void *arg)
 #ifdef CONFIG_AOS_FATFS_SUPPORT_MMC	
 	ret = fatfs_register();
 	printf("reg_result = %d\n", ret);
-	//if(ret == 0)
-	//	test_sd_case();
+	if(ret == 0)
+		sd_on = 1;
 #endif
 
-		light_ir(1);
     GUIDEMO_Main();
 
     while (1)
@@ -249,14 +325,8 @@ void demo_task(void *arg)
 
 void daemon_task(void *arg)
 {
-	static int turn_off = 0;
-
 	krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 	while (1) {
-		if (turn_off == 0 && krhino_sys_time_get() > 6000) {
-			turn_off = 1;
-			light_ir(0);
-		}
 		isd9160_loop_once();
 		krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 	}

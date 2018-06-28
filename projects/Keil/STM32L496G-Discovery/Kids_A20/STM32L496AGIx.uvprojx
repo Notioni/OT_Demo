@@ -1058,6 +1058,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>utility\base64</GroupName>
+          <Files>
+            <File>
+              <FileName>base64.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\utility\base64\base64.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>utility\digest_algorithm</GroupName>
+          <Files>
+            <File>
+              <FileName>CheckSumUtils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\utility\digest_algorithm\CheckSumUtils.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\utility\digest_algorithm\crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>digest_algorithm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\utility\digest_algorithm\digest_algorithm.c</FilePath>
+            </File>
+            <File>
+              <FileName>hmac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\utility\digest_algorithm\hmac.c</FilePath>
+            </File>
+            <File>
+              <FileName>md5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\utility\digest_algorithm\md5.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>utility\log</GroupName>
           <Files>
             <File>
@@ -1109,6 +1149,21 @@
               <FileName>atdemo.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\app\GUI\Kids_A20\ATDEMO\atdemo.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>app\SEDEMO</GroupName>
+          <Files>
+            <File>
+              <FileName>nuoxing_id2.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\app\GUI\Kids_A20\SEDEMO\nuoxing_id2.lib</FilePath>
+            </File>
+            <File>
+              <FileName>id2_client_demo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\app\GUI\Kids_A20\SEDEMO\id2_client_demo.c</FilePath>
             </File>
           </Files>
         </Group>

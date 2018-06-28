@@ -11,7 +11,7 @@ static __IO uint8_t SCData = 0;
 static uint32_t F_Table[16] = {372, 372, 558, 744, 1116, 1488, 1860, 0,
                                0, 512, 768, 1024, 1536, 2048, 0, 0};
 static uint32_t D_Table[8] = {0, 1, 2, 4, 8, 16, 32, 64};
-SMARTCARD_HandleTypeDef hsmartcard2;
+extern SMARTCARD_HandleTypeDef hsmartcard2;
 
 void SC_Reset(int  ResetState);
 
@@ -33,14 +33,14 @@ void HAL_SMARTCARD_MspInit(SMARTCARD_HandleTypeDef* hsmartcard)
     */
     GPIO_InitStruct.Pin = GPIO_PIN_2;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
@@ -78,8 +78,7 @@ void HAL_SMARTCARD_MspDeInit(SMARTCARD_HandleTypeDef* hsmartcard)
   }
 }  
 
-
-int32_t hal_smartcard_Init(void)
+int32_t hal_smartcard_Init_r(void)
 {
   /* USART Clock set to 4 MHz (PCLK1 (80 MHz) / 20) => prescaler set to 10 */
   hsmartcard2.Instance = USART2;
@@ -93,7 +92,7 @@ int32_t hal_smartcard_Init(void)
   hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
   hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
   hsmartcard2.Init.Prescaler = 10;
-  hsmartcard2.Init.GuardTime = 0;
+  hsmartcard2.Init.GuardTime = 1;
   hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
   hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
   hsmartcard2.Init.BlockLength = 0;
@@ -105,7 +104,7 @@ int32_t hal_smartcard_Init(void)
     return HAL_ERROR;
   }
   //printf("HAL_SMARTCARD_Init ok\n");
-  //krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
+  krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
   SC_Reset(GPIO_PIN_SET);
   
   return HAL_OK;
@@ -149,7 +148,7 @@ void SC_Reset_init(viod)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SE_RST_GPIO_Port, &GPIO_InitStruct);
 }
-#if 1
+
 uint8_t SC_PTSConfig(void)
 {
 	uint32_t workingbaudrate = 0, apbclock = 0;
@@ -211,7 +210,7 @@ uint8_t SC_PTSConfig(void)
 				hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
 				hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
 				hsmartcard2.Init.Prescaler = 10;
-				hsmartcard2.Init.GuardTime = 0;
+				hsmartcard2.Init.GuardTime = 1;
 				hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
 				hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
 				hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
@@ -231,127 +230,7 @@ uint8_t SC_PTSConfig(void)
 	}  
 	return HAL_OK;
 }
-#else
-uint8_t SC_PTSConfig(void)
-{
-	uint32_t workingbaudrate = 0, apbclock = 0;
-	uint8_t locData = 0, PPSConfirmStatus = 1;
-	uint8_t SC_PPSS[4] = {0};
 
-	/* Reconfigure the USART Baud Rate -----------------------------------------*/
-	apbclock = HAL_RCC_GetPCLK1Freq();
-	apbclock /= ((USART2->GTPR & (uint16_t)0x00FF) * 2);
-
-	if((g_card_atr.T0 & (uint8_t)0x10) == 0x10){
-		if(g_card_atr.T[0] != 0x11){
-			/* PPSS identifies the PPS request or responce and is equal to 0xFF */
-			SC_PPSS[0] = 0xFF;
-			/* PPS0 indicates by the bits b5, b6, b7 equal to 1 the presence of the optional
-			bytes PPSI1, PPS2, PPS3 respectively */
-			SC_PPSS[1] = 0x10;   /* only send PPS1 */
-			/* PPS1 allows the interface device to propose value of F and D to the card */
-			SC_PPSS[2] = g_card_atr.T[0]; 
-			/* PCK check character */ 
-			SC_PPSS[3] = (uint8_t)0xFF^(uint8_t)0x10^(uint8_t)g_card_atr.T[0];      
-			printf("send SC_PPSS cmd ...\n");
-			//krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/10);
-			if(HAL_SMARTCARD_Transmit(&hsmartcard2, (uint8_t *)SC_PPSS, 4, SC_TRANSMIT_TIMEOUT) != HAL_OK)
-			{
-				Error_Handler();
-			}
-
-			/* PPSS response = PPSS request = 0xFF*/
-			if(HAL_SMARTCARD_Receive(&hsmartcard2, (uint8_t *)&locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK)  
-			{
-				if(locData != 0xFF)
-				{
-					/*PPSS exchange unsuccessful */
-					PPSConfirmStatus = 0x00;
-				}
-
-				/*PPS0 response */
-				if(HAL_SMARTCARD_Receive(&hsmartcard2, (uint8_t *)&locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK)  
-				{
-					if(locData != 0x10)
-					{
-						/*PPS0 exchange unsuccessful */
-						PPSConfirmStatus = 0x00;
-					}
-				}
-				else
-				{
-					Error_Handler();
-				}
-				/*PPS1 response */
-				if(HAL_SMARTCARD_Receive(&hsmartcard2, (uint8_t *)&locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK)
-				{
-					if(locData != g_card_atr.T[0])
-					{
-						/*PPS1 exchange unsuccessful */
-						PPSConfirmStatus = 0x00;
-					}
-				}
-				else
-				{
-					Error_Handler();
-				}
-				/*PCK response */
-				if(HAL_SMARTCARD_Receive(&hsmartcard2, (uint8_t *)&locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK)
-				{
-					if(locData != ((uint8_t)0xFF^(uint8_t)0x10^(uint8_t)g_card_atr.T[0]))
-					{
-						/*PCK exchange unsuccessful */
-						PPSConfirmStatus = 0x00;
-					}
-				}
-				else
-				{
-					Error_Handler();
-				}
-			}
-			else
-			{
-				/*PPSS exchange unsuccessful */
-				PPSConfirmStatus = 0x00;
-			}
-
-			/* PPS exchange successful */
-			if(PPSConfirmStatus == 0x01)
-			{
-				workingbaudrate = apbclock * D_Table[(g_card_atr.T[0] & (uint8_t)0x0F)];
-				workingbaudrate /= F_Table[((g_card_atr.T[0] >> 4) & (uint8_t)0x0F)];
-				printf("workingbaudrate = %d\n", workingbaudrate);
-				hsmartcard2.Instance = USART2;
-				hsmartcard2.Init.BaudRate = workingbaudrate;
-				hsmartcard2.Init.WordLength = SMARTCARD_WORDLENGTH_9B;
-				hsmartcard2.Init.StopBits = SMARTCARD_STOPBITS_1_5;
-				hsmartcard2.Init.Parity = SMARTCARD_PARITY_EVEN;
-				hsmartcard2.Init.Mode = SMARTCARD_MODE_TX_RX;
-				hsmartcard2.Init.CLKPolarity = SMARTCARD_POLARITY_LOW;
-				hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
-				hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
-				hsmartcard2.Init.Prescaler = 10;
-				hsmartcard2.Init.GuardTime = 0;
-				hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-				hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_ENABLE;
-				hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
-				hsmartcard2.Init.BlockLength = 0;  /* T=1 not applicable */
-				hsmartcard2.Init.AutoRetryCount = 3;        
-				hsmartcard2.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_NO_INIT;
-				if(HAL_SMARTCARD_Init(&hsmartcard2) != HAL_OK)
-				{
-					Error_Handler();
-				}
-			}
-			else{
-				printf("PPSConfirmStatus is zero\n");
-				return HAL_ERROR;
-			}
-		}
-	}  
-	return HAL_OK;
-}
-#endif
 static int iso7816_get_atr(unsigned char *atr)
 {
     unsigned char index = 0;
@@ -504,40 +383,68 @@ static uint8_t iso7816_decode_atr(uint8_t *string)
 int t0_send_command_recv_status(SC_ADPU_Commands *apdu,
                                 SC_ADPU_Response *response)
 {
-    int i = 0;
-    int ret = 0;
-    uint8_t locData;
+	int i = 0;
+	int ret = 0;
+	uint8_t locData;
+
+	memset(response->data, 0, LC_MAX);
+	response->SW1 = 0;
+	response->SW2 = 0;
+
+	/* send apdu header */
+	ret = HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.CLA), 1, SC_RECEIVE_TIMEOUT);
+	if(ret != HAL_OK){
+		printf("HAL_SMARTCARD_Transmit CLA error\n");
+		return ret;
+	}
+	ret = HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.INS), 1, SC_RECEIVE_TIMEOUT);
+	if(ret != HAL_OK){
+		printf("HAL_SMARTCARD_Transmit INS error\n");
+		return ret;
+	}
+	ret = HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.P1), 1, SC_RECEIVE_TIMEOUT);
+	if(ret != HAL_OK){
+		printf("HAL_SMARTCARD_Transmit P1 error\n");
+		return ret;
+	}
+	ret = HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.P2), 1, SC_RECEIVE_TIMEOUT);
+	if(ret != HAL_OK){
+		printf("HAL_SMARTCARD_Transmit P2 error\n");
+		return ret;
+	}
 	
-    memset(response->data, 0, LC_MAX);
-    response->SW1 = 0;
-    response->SW2 = 0;
-
-    /* send apdu header */
-    HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.CLA), 1, SC_RECEIVE_TIMEOUT);
-   HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.INS), 1, SC_RECEIVE_TIMEOUT);
-   HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.P1), 1, SC_RECEIVE_TIMEOUT);
-    HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->header.P2), 1, SC_RECEIVE_TIMEOUT);
-    if(apdu->body.LC > 0)
-	HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->body.LC), 1, SC_RECEIVE_TIMEOUT);
-    else if (apdu->body.LE > 0)
-	HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->body.LE), 1, SC_RECEIVE_TIMEOUT);
-
-
-
-	if(HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK){
-		if(((locData & 0xF0) == 0x60) || ((locData & 0xF0) == 0x90))
-		{
-		/* SW1 received */
-			response->SW1 = locData;
-
-		if(HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK)
-		{
-			/* SW2 received */
-			response->SW2 = locData;
+	if(apdu->body.LC > 0){
+		//printf("HAL_SMARTCARD_Transmit LC...\n");
+		ret = HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->body.LC), 1, SC_RECEIVE_TIMEOUT);
+		if(ret != HAL_OK){
+			printf("HAL_SMARTCARD_Transmit LC error\n");
+			return ret;
 		}
 	}
-	else if (((locData & 0xFE) == (((uint8_t)~(apdu->header.INS)) & 0xFE))
-		||((locData & 0xFE) == (apdu->header.INS & 0xFE)))
+	else if (apdu->body.LE > 0){
+		//printf("HAL_SMARTCARD_Transmit LE...\n");
+		ret = HAL_SMARTCARD_Transmit(&hsmartcard2, &(apdu->body.LE), 1, SC_RECEIVE_TIMEOUT);
+		if(ret != HAL_OK){
+			printf("HAL_SMARTCARD_Transmit LE error\n");
+			return ret;
+		}
+	}
+
+	if(HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK){
+		//printf("SE:locData = 0x%x\n", locData);
+		if(((locData & 0xF0) == 0x60) || ((locData & 0xF0) == 0x90))
+		{
+			/* SW1 received */
+			response->SW1 = locData;
+
+			if(HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) == HAL_OK)
+			{
+				/* SW2 received */
+				response->SW2 = locData;
+			}
+		}
+		else if (((locData & 0xFE) == (((uint8_t)~(apdu->header.INS)) & 0xFE))
+			||((locData & 0xFE) == (apdu->header.INS & 0xFE)))
 		{
 			response->data[0] = locData;/* ACK received */
 		}
@@ -545,51 +452,57 @@ int t0_send_command_recv_status(SC_ADPU_Commands *apdu,
 	else
 		return HAL_ERROR;
 
-    /* if no status bytes received */
-    if (response->SW1 == 0) {
-        if (apdu->body.LC > 0) {
-            //send data
-            HAL_SMARTCARD_Transmit(&hsmartcard2,apdu->body.Data, apdu->body.LC, SC_RECEIVE_TIMEOUT);
-            //for (i = 0; i < apdu->body.LC; i++) {
-           //     //iso7816_send_byte(apdu->body.Data[i]);
-		//   HAL_SMARTCARD_Transmit(&hsmartcard2,apdu->body.Data[i], 1, SC_RECEIVE_TIMEOUT);
-           // }
-        } else if (apdu->body.LE > 0) {
-            //receive data
-             ret = HAL_SMARTCARD_Receive(&hsmartcard2, response->data, apdu->body.LE, SC_RECEIVE_TIMEOUT);
-            if (!ret) {
-                return HAL_ERROR;;
-            }
-                
-            #if 0
-            for (i = 0; i < apdu->body.LE; i++) {
-                ret = HAL_SMARTCARD_Receive(&hsmartcard2, response->data[i], 1, SC_RECEIVE_TIMEOUT);
-                if (!ret) {
-                    continue;
-                }
-                return HAL_ERROR;
-            }
-	     #endif
-        } else {
-            return HAL_ERROR;
-        }
-    }
+	/* if no status bytes received */
+	if (response->SW1 == 0) {
+		if (apdu->body.LC > 0) {
+			//send data
+			ret =  HAL_SMARTCARD_Transmit(&hsmartcard2,apdu->body.Data, apdu->body.LC, SC_RECEIVE_TIMEOUT);
+			if(ret != HAL_OK){
+				printf("HAL_SMARTCARD_Transmit LC Data error\n");
+				return ret;
+			}	
+		} 
+		else if (apdu->body.LE > 0) {
+			//receive data
+			ret = HAL_SMARTCARD_Receive(&hsmartcard2, response->data, apdu->body.LE + 2, SC_RECEIVE_TIMEOUT);
+			if (HAL_OK == ret)
+			{
+				response->SW1 = response->data[apdu->body.LE];
+				response->SW2 = response->data[apdu->body.LE + 1];
 
-    /* wait for SW1 SW2*/
-    if (HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) != 0) {
-        return HAL_ERROR;
-    }
-    else
-		response->SW1 = locData;
-	
-    if (HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) != 0) {
-        return HAL_ERROR;
-    }
-    else
-		response->SW1 = locData;
+				//for (i = 0; i < apdu->body.LE + 2; i++)
+				//	printf("response->data[%d] = 0x%x\n", i, response->data[i]);
+			}else{
+				printf("receive data error, ret = 0x%x\n", ret);
+			}
 
-    return HAL_OK;
+			return ret;
+		} 
+		else {
+			return HAL_ERROR;
+		}
+	}
+
+	/* wait for SW1 SW2*/
+	if (HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) != 0) {
+	return HAL_ERROR;
+	}
+	else{
+	//printf("SW1 = 0x%x\n", locData);
+	response->SW1 = locData;
+	}
+
+	if (HAL_SMARTCARD_Receive(&hsmartcard2, &locData, 1, SC_RECEIVE_TIMEOUT) != 0) {
+	return HAL_ERROR;
+	}
+	else{
+	//printf("SW2 = 0x%x\n", locData);
+	response->SW2 = locData;
+	}
+
+	return HAL_OK;
 }
+
 
 int SC_AnswerReq(void)
 {
@@ -600,10 +513,15 @@ int SC_AnswerReq(void)
 	memset(SC_ATR_Table, 0, MAX_ATR_LENGTH);
 	memset(&g_card_atr, 0, sizeof(g_card_atr));
 	
-	if(hal_smartcard_Init() != HAL_OK){
+	#if 0 //need to reinit in each session.
+	if(hal_smartcard_Init_r() != HAL_OK){
 		printf("hal_smartcard_Init error\n");
 		return HAL_ERROR;
 	}
+	#endif
+	krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/100);
+	SC_Reset(GPIO_PIN_SET);
+	
 	//printf("hal_smartcard_Init OK\n");
 	len = iso7816_get_atr(SC_ATR_Table);
 	if (len <= 0x0 || (SC_ATR_Table[0] != ATR_BYTE0)) {
@@ -611,7 +529,7 @@ int SC_AnswerReq(void)
 	     printf("iso7816_get_atr error\n");
             return HAL_ERROR;
         }
-	//printf("iso7816_get_atr OK\n");
+	printf("iso7816_get_atr OK\n");
 	//for(len = 0; len < 40 && string_atr[len] != 0; len++)
 	//	printf("0x%x\n", string_atr[len]);
 	iso7816_decode_atr(SC_ATR_Table);
@@ -623,7 +541,7 @@ void SC_Stop(void)
 {
   SC_Reset(GPIO_PIN_RESET);
   /* Deinitializes the SCHandle */
-  hal_smartcard_DeInit();
+  //hal_smartcard_DeInit();
 }
 
 static int string_to_apdu(SC_ADPU_Commands *apdu,
@@ -636,6 +554,7 @@ static int string_to_apdu(SC_ADPU_Commands *apdu,
     apdu->header.INS = string[1];
     apdu->header.P1 = string[2];
     apdu->header.P2 = string[3];
+	  apdu->header.P3 = string[4];
 
     if (length > 5) {
         apdu->body.LC = string[4];
@@ -676,11 +595,13 @@ int DeviceOpen(void **handle)
         return HAL_ERROR;
     }
     //exchange baud
-    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/20);
-    if(SC_PTSConfig() != HAL_OK){
+    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND/10);
+    #if 0
+		if(SC_PTSConfig() != HAL_OK){
 			printf("SC_PTSConfig error\n");
 			return HAL_ERROR;
     }
+		#endif
     return HAL_OK;
 }
 
@@ -695,15 +616,9 @@ int DeviceTransmit(void *handle, unsigned char *input, int input_len,
     string_to_apdu(&apdu, input, input_len);
 
     ret = t0_send_command_recv_status(&apdu, &response);
-
     if (ret != HAL_OK) {
+	 printf("T0 cmd failed\n");
         return HAL_ERROR;
-    }
-    else if (ret == HAL_OK) {
-        output[0]= response.SW1;
-        output[1]= response.SW2;
-        *output_len = 2;
-        return HAL_OK;
     }
 
     *output_len = response_to_string(output, &response, apdu.body.LE);

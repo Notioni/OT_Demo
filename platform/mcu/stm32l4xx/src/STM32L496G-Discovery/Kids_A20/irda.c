@@ -10,17 +10,19 @@ extern TIM_HandleTypeDef htim17;
 #define IR_SIG_REVERSE
 
 /* in sec */
-#define STUDY_TIME											12
+#define STUDY_TIME                      12
 #define SEND_TIME										  	4
 
 #define FEATURE_TOLERANCE               80
 
 #define MAX_TIME_DATA                   128
-#define MIN_VAID_CODE                   12
+#define MIN_PAYLOAD_PERIOD              12
 
 #define MODULES_TOLERANCE               106 /* 38kHz * 4 */
 #define MIN_DIV                         106 /* 38kHz * 4 */
 #define TRY_RANGE                       27  /* 38kHz * 1 */
+
+#define LOOPBACK_TOLERANCE              1000
 
 #define TIM_FORCED_ACTIVE               ((uint16_t)0x0050)
 #define TIM_FORCED_INACTIVE             ((uint16_t)0x0040)
@@ -39,6 +41,11 @@ typedef struct {
 	uint8_t pwm_data_e;
 } IR_sig_data;
 
+typedef struct {
+	uint32_t time_data_s;
+	uint32_t time_data_e;
+} IR_loopback;
+
 typedef enum {
 	IR_feature_lead_s = 0,
 	IR_feature_lead_e,
@@ -50,8 +57,10 @@ typedef enum {
 } IR_feature_code;
 
 typedef enum {
+	/* A20 IR LOOPBACK TEST CODE */
+	LOOPBACK = 0,
 	/* NEC with simple repeat code : uPD6121G/D6121/BU5777/D1913/LC7461M-C13 & NEC with full repeat code : uPD6121G/LC7461M-C13 */
-	IR_NEC_1 = 0,
+	IR_NEC_1,
 	/* NEC with simple repeat code : AEHA */
 	IR_NEC_2,
 	/* NEC with full repeat code : MN6024-C5D6 */
@@ -70,14 +79,15 @@ typedef enum {
 } IR_encoding_types;
 
 static const IR_lead_time lead_arr[] = {
-	{8280, 9720, 4140, 4860},
-	{2700, 4050, 1350, 2030},
-	{2700, 4050, 2700, 4050},
-	{2790, 4190, 2790, 4190},
-	{2790, 4190, 3000, 4490},
-	{2820, 4220, 2820, 4220},
-	{4140, 4860, 4140, 4860},
-	{1920, 2880, 480 , 720 },
+	{29000, 31000, 9000 , 11000},
+	{8280 , 9720 , 4140 , 4860 },
+	{2700 , 4050 , 1350 , 2030 },
+	{2700 , 4050 , 2700 , 4050 },
+	{2790 , 4190 , 2790 , 4190 },
+	{2790 , 4190 , 3000 , 4490 },
+	{2820 , 4220 , 2820 , 4220 },
+	{4140 , 4860 , 4140 , 4860 },
+	{1920 , 2880 , 480  , 720  },
 };
 
 static IR_sig_data rcv_data[MAX_TIME_DATA] = {{0}};
@@ -228,14 +238,11 @@ static inline int recog_feature(uint32_t time)
 	return -1;
 }
 
-static int irda_classify_feature_code(void)
+static int irda_match_lead(void)
 {
 	int i, j;
-	int lead_range = rcv_count - MIN_VAID_CODE;
-	int lead_encoding_hit = -1;
-	uint32_t feature_sum[IR_feature_max] = {0};
-	uint32_t feature_freq[IR_feature_max] = {0};
-	int ret = 0;
+	int lead_range = rcv_count - MIN_PAYLOAD_PERIOD;
+	int lead_match = -1;
 	
 	for (i = 0; i < lead_range; ++i) {
 		if (rcv_data[i].time_data_s == 0 || rcv_data[i].time_data_e == 0)
@@ -245,16 +252,28 @@ static int irda_classify_feature_code(void)
 			    rcv_data[i].time_data_s < lead_arr[j].lead_s_max &&
 			    rcv_data[i].time_data_e > lead_arr[j].lead_e_min &&
 			    rcv_data[i].time_data_e < lead_arr[j].lead_e_max) {
-				lead_encoding_hit = j;
+				lead_match = j;
 				break;
 			}
 		}
-		if (lead_encoding_hit != -1) {
+		if (lead_match != -1) {
 			lead_data_hit = i;
 			break;
 		}
 	}
-	if (lead_encoding_hit == -1 || lead_data_hit == -1) {
+	
+	return lead_match;
+}
+
+static int irda_classify_feature_code(void)
+{
+	int i;
+	uint32_t feature_sum[IR_feature_max] = {0};
+	uint32_t feature_freq[IR_feature_max] = {0};
+	int ret = 0;
+	
+	ret = irda_match_lead();
+	if (ret == -1 || lead_data_hit == -1) {
 		KIDS_A10_PRT("IR encoding lead can not be found!\n");
 		return -1;
 	}
@@ -281,7 +300,6 @@ static int irda_classify_feature_code(void)
 		} else {
 			if (feature_found + 1 > IR_feature_max) {
 				KIDS_A10_PRT("Overflow feature time is %u\n", rcv_data[i].time_data_s);
-				ir_dbg();
 				return -1;
 			}
 			++feature_found;
@@ -301,7 +319,6 @@ static int irda_classify_feature_code(void)
 		} else {
 			if (feature_found + 1 > IR_feature_max) {
 				KIDS_A10_PRT("Overflow feature time is %u\n", rcv_data[i].time_data_e);
-				ir_dbg();
 				return -1;
 			}
 			++feature_found;
@@ -389,7 +406,6 @@ static int irda_get_pwm_data(void)
         try_data_base = time_min / ++try_div;
     }
     KIDS_A10_PRT("Try div failed, min try_data_base is %lu\n", try_data_base);
-		ir_dbg();
 
     return -1;
 }
@@ -431,24 +447,125 @@ int irda_study_code(void)
 	
 	HAL_NVIC_DisableIRQ(TIM1_CC_IRQn);
 	
-	if (rcv_count < MIN_VAID_CODE || rcv_count >= MAX_TIME_DATA) {
+	if (rcv_data[rcv_count].time_data_s != 0){
+		++rcv_count;
+	}
+	
+	if (rcv_count < MIN_PAYLOAD_PERIOD || rcv_count >= MAX_TIME_DATA) {
 		KIDS_A10_PRT("Receive data is invalid!\n");
+		ir_dbg();
 		return -1;
 	}
+	
+	ret = irda_classify_feature_code();
+	if (ret != 0) {
+		ir_dbg();
+		return -1;
+	}
+	
+	ret = irda_get_pwm_data();
+	if (ret != 0) {
+		ir_dbg();
+		return -1;
+	}
+	
+	resend_flag = 1;
+	
+	return 0;
+}
+
+static void ir_delay(uint32_t msec)
+{
+	uint32_t last_time = krhino_sys_time_get();
+	
+	while (krhino_sys_time_get() - last_time < msec);
+}
+
+int irda_loopback_test(void)
+{
+	int i;
+	uint32_t now_time = 0;
+	int ret = 0;
+	const IR_loopback loopback_arr[] = {
+		{30000, 10000},
+		{20000, 20000},
+		{10000, 30000},
+		{20000, 30000},
+		{40000, 10000},
+		{10000, 10000},
+		{30000, 20000},
+		{20000, 20000},
+		{10000, 30000},
+		{20000, 30000},
+		{40000, 10000},
+		{10000, 10000},
+		{30000, 20000},
+	};
+	const int loopback_len = sizeof(loopback_arr) / sizeof(IR_loopback);
+	
+	last_rcv_time = 0;
+	rcv_count = 0;
+	lead_data_hit = -1;
+	feature_found = 0;
+	pwm_div = 0;
+	memset(rcv_data, 0, sizeof(rcv_data));
+	memset(feature_code, 0, sizeof(feature_code));
+	memset(pwm_data, 0, sizeof(pwm_data));
+	
+	HAL_NVIC_SetPriority(TIM1_CC_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
+	
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_2);
+	
+	ir_delay(10);
+	for (i = 0; i < loopback_len; ++i) {
+		light_ir(1);
+		ir_delay(loopback_arr[i].time_data_s / 1000);
+		light_ir(0);
+		ir_delay(loopback_arr[i].time_data_e / 1000);
+	}
+	krhino_task_sleep(krhino_ms_to_ticks(500));
 	
 	if (rcv_data[rcv_count].time_data_s != 0){
 		++rcv_count;
 	}
 	
-	ret = irda_classify_feature_code();
-	if (ret != 0)
-		return -1;
+	HAL_TIM_IC_Stop_IT(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_IC_Stop_IT(&htim1, TIM_CHANNEL_2);
 	
-	ret = irda_get_pwm_data();
-	if (ret != 0)
-		return -1;
+	HAL_NVIC_DisableIRQ(TIM1_CC_IRQn);
 	
-	resend_flag = 1;
+	if (rcv_count < loopback_len || rcv_count >= MAX_TIME_DATA) {
+		KIDS_A10_PRT("Receive data is invalid!\n");
+		ir_dbg();
+		return -1;
+	}
+	
+	ret = irda_match_lead();
+	if (ret != LOOPBACK || lead_data_hit == -1) {
+		KIDS_A10_PRT("IR encoding lead can not be found!\n");
+		ir_dbg();
+		return -1;
+	}
+	
+	for (i = 0; i < loopback_len; ++i) {
+		if (rcv_data[lead_data_hit + i].time_data_s < loopback_arr[i].time_data_s - LOOPBACK_TOLERANCE ||
+			  rcv_data[lead_data_hit + i].time_data_s > loopback_arr[i].time_data_s + LOOPBACK_TOLERANCE) {
+			break;
+		}
+		if (i != loopback_len - 1 &&
+			  (rcv_data[lead_data_hit + i].time_data_e < loopback_arr[i].time_data_e - LOOPBACK_TOLERANCE ||
+			  rcv_data[lead_data_hit + i].time_data_e > loopback_arr[i].time_data_e + LOOPBACK_TOLERANCE)) {
+			break;
+		}
+	}
+	
+	if (i != loopback_len) {
+		KIDS_A10_PRT("IR Loop Test Failed!\n");
+		ir_dbg();
+		return -1;
+	}
 	
 	return 0;
 }

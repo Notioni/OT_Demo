@@ -511,6 +511,7 @@ void GUIDEMO_Main(void) {
     		  // GUI_Exit();
     		  break;
   		  }
+	 camera_to_sd();
         krhino_task_sleep(krhino_ms_to_ticks(100));
       }
     }
