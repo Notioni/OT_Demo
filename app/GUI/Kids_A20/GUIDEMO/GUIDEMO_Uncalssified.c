@@ -1108,8 +1108,8 @@ void GUIDEMO_Other_Sensors()
 {
   #define OTHER_SENSOR_X_START      30
   #define OTHER_SENSOR_DATA_START   20
-  #define OTHER_SENSOR_Y_START      30
-  #define OTHER_SENSOR_Y_STEP       30
+  #define OTHER_SENSOR_Y_START      25
+  #define OTHER_SENSOR_Y_STEP       25
 
   int xSize = LCD_GetXSize();
   uint32_t baro_data = 0;
@@ -1118,7 +1118,7 @@ void GUIDEMO_Other_Sensors()
   uint32_t als_data = 0;
   uint32_t ps_data = 0;
   // int retry = 0;
-  int study_flag = -1;
+  // int study_flag = -1;
   open_other_sensor();
 
   GUIDEMO_DrawBk(1);
@@ -1134,7 +1134,7 @@ void GUIDEMO_Other_Sensors()
   GUI_DispStringAt("humidity",             OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 2);
   GUI_DispStringAt("als",                  OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 3);
   GUI_DispStringAt("proximity",            OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
-#if 0 // disable irda
+#if 1 // disable irda
   GUI_DispStringAt("irda",                 OTHER_SENSOR_X_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
 
   key_a_flag = 0;
@@ -1181,22 +1181,25 @@ void GUIDEMO_Other_Sensors()
       GUI_DispStringAtCEOL("unknow", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 4);
     }
 
-#if 0 // disable irda
+#if 1 // disable irda
     // press key A to study
-    if (study_flag != 0 && key_a_flag == 1) {
+    // if (study_flag != 0 && key_a_flag == 1) {
+    if (key_a_flag == 1) {
       // study
       printf("begin study\n");
       GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
       GUI_DispCEOL();
       GUI_DispStringHCenterAt("irda studying", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
 
-      if (irda_study_code() == 0) {
-        study_flag = 0;
+      // if (irda_study_code() == 0) {
+      if (irda_loopback_test() == 0) {
+        // study_flag = 0;
         GUI_DispStringAtCEOL("OK", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
       }
       else {
         GUI_DispStringAtCEOL("FAIL", (xSize >> 1) + OTHER_SENSOR_DATA_START, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 5);
       }
+      printf("IRDA study end.\n");
 
       // init key value
       key_a_flag = 0;
@@ -1205,7 +1208,7 @@ void GUIDEMO_Other_Sensors()
       GUI_GotoXY(0, OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
       GUI_DispCEOL();
     }
-
+#if 0
     printf("%s(%d), key_a_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, key_a_flag, study_flag);
     if (study_flag == 0 && key_a_flag == 1) {
       if (irda_send_code() == 0) {
@@ -1221,9 +1224,11 @@ void GUIDEMO_Other_Sensors()
         GUI_DispStringHCenterAt("irda send fail", (xSize >> 1), OTHER_SENSOR_Y_START + OTHER_SENSOR_Y_STEP * 6);
       }
     }
-
     key_a_flag = 0;
+
     printf("%s(%d), key_a_flag %d, study_flag %d \n", __FUNCTION__, __LINE__, key_a_flag, study_flag);
+#endif
+
 #endif
 
     int time_counter = 0;

@@ -218,7 +218,7 @@ static void ir_dbg(void)
 		printf("Feature %d time is %lu, PWM data is %lu, PWM time is %lu\n", i, feature_code[i], pwm_data[i], pwm_data[i] * pwm_div);
 	}
 	
-	while (1);
+	// while (1);
 }
 
 static inline int recog_feature(uint32_t time)
