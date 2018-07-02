@@ -254,6 +254,7 @@ enum gui_demo_page {
   GUI_DEMO_PAGE_4,
   GUI_DEMO_PAGE_5,
   GUI_DEMO_PAGE_6,
+  GUI_DEMO_PAGE_7,
 
   GUI_DEMO_PAGE_INIT  = 100,
 
@@ -340,6 +341,8 @@ void GUIDEMO_Sound_record     (void);
 void GUIDEMO_G_Sensors        (void);
 void GUIDEMO_Other_Sensors    (void);
 void GUIDEMO_Loopback         (void);
+void GUIDEMO_Se               (void);
+
 
 /*********************************************************************
 *

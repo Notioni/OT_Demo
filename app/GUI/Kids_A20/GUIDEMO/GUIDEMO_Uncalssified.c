@@ -1313,6 +1313,61 @@ void GUIDEMO_Loopback()
   }
 }
 
+void GUIDEMO_Se()
+{
+#define SE_Y_OFFSET    60
+#define SE_Y_STEP1     30
+#define SE_Y_STEP2     40
+
+  GUIDEMO_DrawBk(1);
+  GUI_SetColor(GUI_BLACK);
+  GUIDEMO_DrawBk(1);
+
+  // set font
+  GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font24_ASCII);
+
+  // display prompt message : press key A starting se test
+  int xSize = LCD_GetXSize();
+  GUI_DispStringHCenterAt("Press key A", xSize >> 1, SE_Y_OFFSET);
+  GUI_DispStringHCenterAt("to start SE encrypting", xSize >> 1, SE_Y_OFFSET + SE_Y_STEP1);
+
+  int ret_val;
+  key_a_flag = 0;
+  while (1) {
+    // check key A flag, and execute suitsbly fuction
+    if (key_a_flag == 1) {
+      printf("start SE encrypting \n");
+      GUI_GotoXY(0, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
+      GUI_DispCEOL();
+      GUI_DispStringHCenterAt("SE encrypting", xSize >> 1, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
+
+      ret_val = test_se();
+      GUI_GotoXY(0, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
+      GUI_DispCEOL();
+      if (test_se() == HAL_OK) {
+        // display se OK
+        GUI_DispStringHCenterAt("SE encrypt OK", xSize >> 1, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
+      }
+      else {
+        // display se FAIL
+        GUI_DispStringHCenterAt("SE encrypt FAIL", xSize >> 1, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
+      }
+
+      key_a_flag = 0;
+    }
+
+    if (key_flag != GUI_DEMO_PAGE_6) {
+      // KEY stabilization
+      krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
+      if (key_flag != GUI_DEMO_PAGE_INIT)
+        key_flag = GUI_DEMO_PAGE_7;
+      return;
+    }
+    krhino_task_sleep(krhino_ms_to_ticks(100));
+  }
+}
+
 #if 0
 #define SOUND_FUN_IDLE       0
 #define SOUND_FUN_EXECUTE    1

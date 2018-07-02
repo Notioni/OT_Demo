@@ -463,6 +463,11 @@ static void _Main(void) {
         break;
       }
 
+      case GUI_DEMO_PAGE_6: {
+        GUIDEMO_Se();
+        break;
+      }
+
       case GUI_DEMO_PAGE_INIT: {
         // GUIDEMO_Intro();
         // GUIDEMO_Delay(1000);
