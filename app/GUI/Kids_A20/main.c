@@ -11,6 +11,11 @@
 #include <aos/uData.h>
 #include "isd9160.h"
 #include "irda.h"
+
+#if defined(NB_MOUDLE) || defined(LORA_MODULE)
+#include "atdemo.h"
+#endif
+
 #ifdef CONFIG_AOS_FATFS_SUPPORT_MMC
 #include "fatfs.h"
 static const char *g_string         = "Fatfs test string.";
@@ -25,15 +30,20 @@ static const char *g_new_filepath   = "/sdcard/testDir/newname.txt";
 #define DEMO_TASK_PRIORITY     20
 #define DAEMON_TASK_STACKSIZE 1024 //512*cpu_stack_t = 2048byte
 #define DAEMON_TASK_PRIORITY  21
+#define UART_RECEIVE_TASK_PRIORITY 22
+#define WIFICMD_TASK_PRIORITY  23
 
-#define WIFICMD_TASK_PRIORITY  22
 extern void wifi_cmd_task(void *arg);
 static ktask_t demo_task_obj;
 static ktask_t daemon_task_obj;
 static ktask_t nt_task_obj;
+static ktask_t uart_receive_task_obj;
+
 cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
 cpu_stack_t nt_task_buf[DEMO_TASK_STACKSIZE];
 cpu_stack_t daemon_task_buf[DAEMON_TASK_STACKSIZE];
+cpu_stack_t uart_receive_task_buf[DEMO_TASK_STACKSIZE];
+
 static kinit_t kinit;
 extern int key_flag;
 extern int key_a_flag;
@@ -206,7 +216,7 @@ void test_sd_case(void)
         aos_close(fd);
 }
 #endif
-#if 1
+#if !defined(NB_MOUDLE) && !defined(LORA_MODULE)
 int test_se1(void)
 {
 	char test[2][20];
@@ -343,6 +353,9 @@ int main(void)
 
     krhino_task_create(&daemon_task_obj, "daemon_task", 0, DAEMON_TASK_PRIORITY, 
         50, daemon_task_buf, DAEMON_TASK_STACKSIZE, daemon_task, 1);
+
+    krhino_task_create(&uart_receive_task_obj, "uart_receive_task", 0, UART_RECEIVE_TASK_PRIORITY, 
+        50, uart_receive_task_buf, DEMO_TASK_STACKSIZE, uart_message_receive, 1);
 
     krhino_start();
     

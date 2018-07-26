@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
+#if !defined(NB_MOUDLE) && !defined(LORA_MODULE)
 #include "hal_smartcard_stm32l4.h"
 
 
@@ -635,4 +635,5 @@ int DeviceClose(void *handle)
 
     return HAL_OK;
 }
+#endif
 

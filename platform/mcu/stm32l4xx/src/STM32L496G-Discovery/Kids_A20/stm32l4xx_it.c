@@ -41,8 +41,11 @@
 
 /* External variables --------------------------------------------------------*/
 extern UART_HandleTypeDef lpuart1_handle;
-//extern UART_HandleTypeDef uart2_handle;
+#if defined(LORA_MODULE) || defined(NB_MOUDLE)
+extern UART_HandleTypeDef uart2_handle;
+#else
 extern SMARTCARD_HandleTypeDef hsmartcard2;
+#endif
 extern UART_HandleTypeDef uart3_handle;
 extern UART_HandleTypeDef uart4_handle;
 extern DCMI_HandleTypeDef hdcmi_handle;
@@ -155,8 +158,11 @@ void LPUART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   krhino_intrpt_enter();
-  //HAL_UART_IRQHandler(&huart2);
+  #if defined(LORA_MODULE) || defined(NB_MOUDLE)
+  HAL_UART_IRQHandler(&uart2_handle);
+  #else
   HAL_SMARTCARD_IRQHandler(&hsmartcard2);
+  #endif
   krhino_intrpt_exit();
 }
 

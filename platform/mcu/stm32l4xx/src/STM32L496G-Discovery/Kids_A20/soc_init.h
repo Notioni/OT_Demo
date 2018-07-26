@@ -46,6 +46,7 @@
 /* AliOS HAL now include gpio i2c uart */
 #define ALIOS_HAL
 #define LORA_MODULE
+#define NB_MOUDLE
 
 #ifdef ALIOS_HAL
 #include "hal.h"

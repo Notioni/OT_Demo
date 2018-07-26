@@ -179,7 +179,9 @@ void stm32_soc_init(void)
   MX_USART3_UART_Init();
 #endif
   /*xiehj add DMA2 config*/
+#if !defined(NB_MOUDLE) && !defined(LORA_MODULE)
   Hal_Smartcard_Init();
+#endif
   MX_DMA_Init();
   MX_ADC3_Init();
   MX_DCMI_Init();
@@ -342,9 +344,12 @@ gpio_dev_t brd_gpio_table[] = {
 	#ifdef LORA_MODULE
 	{ZIGBEE_INT, OUTPUT_PUSH_PULL, &gpio_set},
 	#endif
-  //{ZIGBEE_INT, IRQ_MODE, &mode_rising},
-	//{ZIGBEE_RST, OUTPUT_PUSH_PULL, &gpio_set},
+  #if defined(NB_MOUDLE)
+  // {ZIGBEE_INT, IRQ_MODE, &mode_rising},
+	{ZIGBEE_RST, OUTPUT_PUSH_PULL, &gpio_set},
+	#else
 	{SE_RST, OUTPUT_PUSH_PULL, &gpio_reset},
+	#endif
 };
 
 i2c_dev_t brd_i2c2_dev = {AOS_PORT_I2C2, {0}, NULL};
@@ -380,7 +385,9 @@ static void brd_peri_init(void)
 		hal_gpio_init(&brd_gpio_table[i]);
 	}
 	hal_uart_init(&uart_0);
-	//hal_uart_init(&brd_uart2_dev);
+  #if defined(LORA_MODULE) || defined(NB_MOUDLE)
+	hal_uart_init(&brd_uart2_dev);
+  #endif
 	hal_uart_init(&brd_uart3_dev);
 	hal_uart_init(&brd_uart4_dev);
 	hal_i2c_init(&brd_i2c2_dev);

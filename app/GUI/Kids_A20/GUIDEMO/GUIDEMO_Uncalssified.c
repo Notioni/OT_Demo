@@ -920,7 +920,7 @@ void GUIDEMO_Version_Info (void)
 
   // display version info
   GUI_DispStringAt("HW version: A20_1_12",     VERSION_X_OFFSET, VERSION_Y_START);
-  GUI_DispStringAt("FW version: A20_V0.93",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
+  GUI_DispStringAt("FW version: A20_V0.94",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
   // GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   GUI_DispStringAt("SD CARD: ",                VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   GUI_DispStringAt("sensor data upload:",      VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
@@ -942,7 +942,7 @@ void GUIDEMO_Version_Info (void)
         GUI_DispStringAtCEOL("NOT EXIST",  SD_CARD_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
       }
     }
-
+#if 1
     // printf("check sd card end, key_flag %d \n", key_flag);
     // every 10 s run once
     if (check_flag == 0 || key_a_flag == 1) {
@@ -968,7 +968,7 @@ void GUIDEMO_Version_Info (void)
       check_flag = 1;
       printf("check wifi ssid end, key_flag %d \n", key_flag);
     }
-
+#endif
     for (int i = 0; i < 10; i++) {
       if (key_flag != GUI_DEMO_PAGE_1) {
         // KEY stabilization
@@ -1341,11 +1341,14 @@ void GUIDEMO_Se()
       GUI_GotoXY(0, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
       GUI_DispCEOL();
       GUI_DispStringHCenterAt("SE encrypting", xSize >> 1, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
-
+#if !defined(NB_MOUDLE) && !defined(LORA_MODULE)
       ret_val = test_se();
+#else
+      ret_val = HAL_ERROR;
+#endif
       GUI_GotoXY(0, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
       GUI_DispCEOL();
-      if (test_se() == HAL_OK) {
+      if (ret_val == HAL_OK) {
         // display se OK
         GUI_DispStringHCenterAt("SE encrypt OK", xSize >> 1, SE_Y_OFFSET + SE_Y_STEP1 + SE_Y_STEP2);
       }

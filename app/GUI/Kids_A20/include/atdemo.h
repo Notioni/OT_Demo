@@ -71,51 +71,6 @@ enum at_cmd_e {
      //FOTA
     AT_CMD_AT_FOTA,
 
-#ifdef LORA_MODULE
-    // LORA
-    AT_CMD_AT_,
-    AT_CMD_AT_RESET,
-    AT_CMD_AT_SAVE,
-    AT_CMD_AT_VERS_GET,
-    AT_CMD_AT_BAUD_GET,
-    AT_CMD_AT_BAUD_SET,
-    AT_CMD_AT_CONFIRM_GET,
-    AT_CMD_AT_CONFIRM_SET,
-    AT_CMD_AT_NBTRIALS_GET,
-    AT_CMD_AT_NBTRIALS_SET,
-    AT_CMD_AT_ADR_GET,
-    AT_CMD_AT_ADR_SET,
-    AT_CMD_AT_CLASS_GET,
-    AT_CMD_AT_CLASS_SET,
-    AT_CMD_AT_PORT_GET,
-    AT_CMD_AT_PORT_SET,
-    AT_CMD_AT_LINK,
-    AT_CMD_AT_TIME,
-    AT_CMD_AT_TIME_GET,
-    AT_CMD_AT_SIGNAL_GET,
-    AT_CMD_AT_DATARATE_GET,
-    AT_CMD_AT_DATARATE_SET,
-    AT_CMD_AT_SEND_SET,
-    AT_CMD_AT_SENDCK_SET,
-    AT_CMD_AT_JOIN_GET,
-    AT_CMD_AT_JOIN_SET,
-    AT_CMD_AT_SLEEP_SET,
-    AT_CMD_AT_HEART,
-    AT_CMD_AT_HEART_GET,
-    AT_CMD_AT_HEART_SET,
-    AT_CMD_AT_CHANNEL_GET,
-    AT_CMD_AT_CHANNEL_SET,
-    AT_CMD_AT_DEVEUI_GET,
-    AT_CMD_AT_APPEUI_GET,
-    AT_CMD_AT_APPEUI_SET,
-    AT_CMD_AT_APPKEY_GET,
-    AT_CMD_AT_APPKEY_SET,
-    AT_CMD_AT_POWER_GET,
-    AT_CMD_AT_POWER_SET,
-    AT_CMD_AT_AUTO_GET,
-    AT_CMD_AT_AUTO_SET,
-#endif
-
     AT_CMD_MAX = 0xff   
 };
 
@@ -127,6 +82,10 @@ struct at_ap_command {
 };
 
 uint32_t at_cmd_request(enum at_cmd_e request_id, char *pInBuffer, char *pOutBuffer, uint16_t OutLength);
+
+#if defined(NB_MOUDLE) || defined(LORA_MODULE)
+void uart_message_receive();
+#endif
 
 #endif  /* Avoid multiple inclusion */
 

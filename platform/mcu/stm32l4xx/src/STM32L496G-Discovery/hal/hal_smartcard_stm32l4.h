@@ -70,12 +70,12 @@ typedef struct
   uint8_t SW1;          /* Command Processing status */
   uint8_t SW2;          /* Command Processing qualification */
 } SC_ADPU_Response;
-
+#if !defined(NB_MOUDLE) && !defined(LORA_MODULE)
 int DeviceOpen(void **handle);
 int DeviceTransmit(void *handle, unsigned char *input, int input_len,
                     unsigned char *output, int *output_len);
 int DeviceClose(void *handle);
-
+#endif
 
 #ifdef __cplusplus
 }
