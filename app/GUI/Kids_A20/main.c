@@ -260,26 +260,31 @@ int test_se2(void)
 	uint8_t ins[] = {0x00, 0x36, 0x00, 0x00,  0x03, 0x41, 0x00, 0x41};
 	uint8_t ins2[] = {0x00, 0xC0, 0x00, 0x00, 0x1D};
 	uint8_t ins_out[31] = {0};
+	/*
 	uint8_t ins_resp[31] = {
 		0x41, 0x30, 0x30, 0x33, 0x43, 0x46, 0x41, 0x39, 0x43, 0x35, 
 		0x43, 0x44, 0x36, 0x46, 0x35, 0x30, 0x44, 0x45, 0x39, 0x43, 
 		0x32, 0x45, 0x33, 0x30, 0x30, 0x18, 0x00, 0x05, 0xde, 0x90, 0x00
 	};
-	uint8_t ii;
-	retval = DeviceTransmit(NULL, ins, sizeof(ins), ins_out, sizeof(ins_out));
+	*/
+	int32_t resp_len = 0;
+	
+	retval = DeviceTransmit(NULL, ins, sizeof(ins), ins_out, &resp_len);
 	if(retval){
 		printf("ins cmd error\n");
 		return HAL_ERROR;
 	}
-	retval = DeviceTransmit(NULL, ins2, sizeof(ins2), ins_out, sizeof(ins_out));
+	retval = DeviceTransmit(NULL, ins2, sizeof(ins2), ins_out, &resp_len);
 	if(retval){
 		printf("ins2 cmd error\n");
 		return HAL_ERROR;
 	}
-	for(ii = 0; ii < 0x1D + 2; ii++){
-		if(ins_out[ii] != ins_resp[ii]){
-			return HAL_ERROR;
-		}
+	printf("resp_len = %d\n", resp_len);
+	printf("ins_out[29] = 0x%x\n", ins_out[29]);
+	printf("ins_out[30] = 0x%x\n", ins_out[30]);
+	if(resp_len != (0x1D + 2) || ins_out[resp_len -2] != 0x90 || ins_out[resp_len -1] != 0x00){
+		printf("cmd respone length or SW error\n");
+		return HAL_ERROR;
 	}
 	return HAL_OK;
 }
