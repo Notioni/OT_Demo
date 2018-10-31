@@ -23,7 +23,7 @@ extern "C" {
 #define SETUP_LENGTH       20
 #define HIST_LENGTH        20
 #define LC_MAX             256
-#define SC_RECEIVE_TIMEOUT  1000  /* Direction to reader */
+#define SC_RECEIVE_TIMEOUT  200  /* Direction to reader */
 #define SC_TRANSMIT_TIMEOUT 200  /* Direction to transmit */
 #define MAX_ATR_LENGTH  40
 

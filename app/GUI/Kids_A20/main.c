@@ -359,9 +359,11 @@ int main(void)
     krhino_task_create(&daemon_task_obj, "daemon_task", 0, DAEMON_TASK_PRIORITY, 
         50, daemon_task_buf, DAEMON_TASK_STACKSIZE, daemon_task, 1);
 
+#if defined(NB_MOUDLE) || defined(LORA_MODULE)
     krhino_task_create(&uart_receive_task_obj, "uart_receive_task", 0, UART_RECEIVE_TASK_PRIORITY, 
         50, uart_receive_task_buf, DEMO_TASK_STACKSIZE, uart_message_receive, 1);
-
+#endif
+	
     krhino_start();
     
     return 0;
