@@ -70,6 +70,7 @@ enum at_cmd_e {
     AT_CMD_AT_CIPRECVCFG_SET,
      //FOTA
     AT_CMD_AT_FOTA,
+     AT_CMD_AT_GETATVERSION_V2,
 
     AT_CMD_MAX = 0xff   
 };
