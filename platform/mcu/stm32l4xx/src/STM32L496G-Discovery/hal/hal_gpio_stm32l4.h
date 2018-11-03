@@ -193,7 +193,7 @@
 #define WIFI_WU                    HAL_GPIO_17
 #define ZIGBEE_INT                 HAL_GPIO_72
 #define ZIGBEE_RST                 HAL_GPIO_55
-#define SE_RST			HAL_GPIO_72
+#define SE_RST                     HAL_GPIO_79
 
 #define GPIOA_SPEED	 GPIO_SPEED_FREQ_VERY_HIGH
 

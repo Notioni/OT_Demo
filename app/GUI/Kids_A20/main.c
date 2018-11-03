@@ -338,10 +338,22 @@ void demo_task(void *arg)
     };
 }
 
+static void LED_test(void)
+{
+	hal_gpio_output_toggle(&brd_gpio_table[GPIO_ALS_LED]);
+	hal_gpio_output_toggle(&brd_gpio_table[GPIO_GS_LED]);
+	hal_gpio_output_toggle(&brd_gpio_table[GPIO_COMPASS_LED]);
+}
+
 void daemon_task(void *arg)
 {
+	static int test_flag = (5 << 1) - 1;
 	krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 	while (1) {
+		if (test_flag) {
+			--test_flag;
+			LED_test();
+		}
 		isd9160_loop_once();
 		krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 	}

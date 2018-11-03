@@ -924,7 +924,7 @@ void GUIDEMO_Version_Info (void)
 	} else {
 		GUI_DispStringAt("HW version: A20_1_12",     VERSION_X_OFFSET, VERSION_Y_START);
 	}
-  GUI_DispStringAt("FW version: A20_V1.02",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
+  GUI_DispStringAt("FW version: A20_V1.05",    VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
   // GUI_DispStringAt("Slogan: Aliot Things",           VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   GUI_DispStringAt("SD CARD: ",                VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
   GUI_DispStringAt("sensor data upload:",      VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);

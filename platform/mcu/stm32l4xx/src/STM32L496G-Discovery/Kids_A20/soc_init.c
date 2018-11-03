@@ -317,14 +317,14 @@ static uint8_t gpio_reset = 0;
 
 gpio_dev_t brd_gpio_table[] = {
 	{ALS_INT, IRQ_MODE, &mode_rising},
-	{ALS_LED, OUTPUT_PUSH_PULL, &gpio_set},
+	{ALS_LED, OUTPUT_PUSH_PULL, &gpio_reset},
 	{AUDIO_CTL, OUTPUT_PUSH_PULL, &gpio_reset},
 	{AUDIO_RST, OUTPUT_PUSH_PULL, &gpio_set},
 	{AUDIO_WU, OUTPUT_PUSH_PULL, &gpio_set},
 	{CAM_PD, OUTPUT_PUSH_PULL, &gpio_set},
 	{CAM_RST, OUTPUT_PUSH_PULL, &gpio_set},
-	{COMPASS_LED, OUTPUT_PUSH_PULL, &gpio_set},
-	{GS_LED, OUTPUT_PUSH_PULL, &gpio_set},
+	{COMPASS_LED, OUTPUT_PUSH_PULL, &gpio_reset},
+	{GS_LED, OUTPUT_PUSH_PULL, &gpio_reset},
 	{HTS_LED, OUTPUT_PUSH_PULL, &gpio_set},
 	{KEY_1, IRQ_MODE, &mode_rising},
 	{KEY_2, IRQ_MODE, &mode_rising},
