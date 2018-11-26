@@ -54,6 +54,16 @@ static void get_images_index(uint32_t base_index)
 	}
 }
 
+void camera_open(void)
+{
+	HAL_DCMI_Start_DMA(phdcmi, DCMI_MODE_CONTINUOUS,  (uint32_t)pBuffer , (ST7789_WIDTH* ST7789_HEIGHT)/2 );
+}
+
+void camera_close(void)
+{
+	HAL_DCMI_Stop(phdcmi);
+}
+
 void CAMERA_Init(uint32_t Resolution)
 {
 	camera_drv = &gc0329_drv;
@@ -105,8 +115,9 @@ void CameraDEMO_Main(void)
 		     with words alignment, the last parameter of HAL_DCMI_Start_DMA is set to:
 		      (ST7789H2_LCD_PIXEL_WIDTH*ST7789H2_LCD_PIXEL_HEIGHT)/2, that is 240 * 240 / 2
 		   */   
-		  hal_status = HAL_DCMI_Start_DMA(phdcmi, DCMI_MODE_CONTINUOUS,  (uint32_t)pBuffer , (ST7789_WIDTH* ST7789_HEIGHT)/2 );
+		  //hal_status = HAL_DCMI_Start_DMA(phdcmi, DCMI_MODE_CONTINUOUS,  (uint32_t)pBuffer , (ST7789_WIDTH* ST7789_HEIGHT)/2 );
 		 // OnError_Handler(hal_status != HAL_OK); 
+		 camera_close();
 	}	
 }
 
@@ -114,7 +125,7 @@ uint8_t read_camera_flag = 1;
 extern int   key_a_flag;
 void GC0329_CAMERA_FrameEventCallback(void)
 {
-	if(camera_dis_on){
+	//if(camera_dis_on){
 		HAL_DCMI_Suspend(phdcmi);
 		camera_dispaly(pBuffer, (ST7789_WIDTH* ST7789_HEIGHT));
 		if(read_camera_flag && key_a_flag){
@@ -122,7 +133,7 @@ void GC0329_CAMERA_FrameEventCallback(void)
 			//memcpy(pBuffer_t, pBuffer, sizeof(pBuffer));
 		}
 		HAL_DCMI_Resume(phdcmi);
-	}
+	//}
 }
 
 /**

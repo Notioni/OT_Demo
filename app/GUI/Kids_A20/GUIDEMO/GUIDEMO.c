@@ -505,10 +505,12 @@ void GUIDEMO_Main(void) {
     }
     else {
 	    GUI_Init();
-      camera_dis_on = 1;
+      //camera_dis_on = 1;
+      camera_open();
       while(1) {
         if (key_flag != GUI_DEMO_PAGE_4) {
-    		  camera_dis_on = 0;
+    		  //camera_dis_on = 0;
+    		  camera_close();
           // KEY stabilization
           krhino_task_sleep(krhino_ms_to_ticks(KEY_STABILIZATION));
           if (key_flag != GUI_DEMO_PAGE_INIT)
