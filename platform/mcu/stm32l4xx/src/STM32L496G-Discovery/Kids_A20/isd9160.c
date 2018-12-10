@@ -5,12 +5,14 @@
 #include <string.h>
 
 #define ISD9160_I2C_ADDR                (0x15 << 1)
-#define ISD9160_I2C_TIMEOUT             AOS_WAIT_FOREVER
+#define ISD9160_I2C_TIMEOUT             1000
 #define ISD9160_ROM_SIZE                0x24400
 #define UPG_FRAME_HEAD_SIZE             sizeof(UPG_FRAME_HEAD)
 #define UPG_PAYLOAD_HAED_SIZE           sizeof(UPG_PAYLOAD_HEAD)
 #define UPG_PAYLOAD_DATA_SIZE           128
 #define SLAVE_DATA_MAX                  (UPG_PAYLOAD_HAED_SIZE + UPG_PAYLOAD_DATA_SIZE)
+#define SLPRT_HEAD_LEN                  4
+#define SLPRT_PAYLOAD_LEN               (SLAVE_DATA_MAX - SLPRT_HEAD_LEN)
 #define UPG_FRAME_MAGIC                 0x18
 #define UPG_HINT_GRANU                  5
 #define UPG_HINT_DIV                    (100 / UPG_HINT_GRANU)
@@ -214,6 +216,10 @@ static int handle_slprt(void)
 		}
 		if (size == 0) {
 			ret = slprt_num;
+			break;
+		} else if (size > SLPRT_PAYLOAD_LEN) {
+			KIDS_A10_PRT("isd9160_slprt_size return size %lu is too big.\n", size);
+			ret = -1;
 			break;
 		}
 		memset(buf, 0, sizeof(buf));
