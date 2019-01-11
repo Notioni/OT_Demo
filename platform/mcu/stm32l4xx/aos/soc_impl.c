@@ -67,7 +67,11 @@ extern void         *heap2_len;
 
 
 #if defined (__CC_ARM) /* Keil / armcc */
+#if defined (STM32L496xx)
 #define HEAP_BUFFER_SIZE 1024*15
+#else
+#define HEAP_BUFFER_SIZE 1024*10
+#endif
 uint8_t g_heap_buf[HEAP_BUFFER_SIZE];
 k_mm_region_t g_mm_region[] = {{g_heap_buf, HEAP_BUFFER_SIZE}};
 #else
